@@ -1,0 +1,25 @@
+# PS文书助手 - GitHub Actions 自动部署到 EdgeOne Pages
+
+name: Deploy to EdgeOne Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Upload to EdgeOne Pages
+        uses: TencentEdgeOne/pages-action@v1
+        with:
+          # 在 GitHub Secrets 中配置
+          PROJECT_ID: ${{ secrets.EO_PROJECT_ID }}
+          SERVICE_ID: ${{ secrets.EO_SERVICE_ID }}
+          API_TOKEN: ${{ secrets.EO_API_TOKEN }}
+          # 指定 web 目录为部署目标
+          DIRECTORY: ./web

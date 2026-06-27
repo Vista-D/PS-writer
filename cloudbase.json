@@ -1,0 +1,34 @@
+{
+  "envId": "your-env-id",
+  "framework": {
+    "plugins": {
+      "client": {
+        "use": "@cloudbase/framework-plugin-website",
+        "inputs": {
+          "name": "ps-writer",
+          "platform": "static",
+          "publicPath": "/ps-writer",
+          "cloudPath": "/ps-writer",
+          "localPath": "./web",
+          "indexDocument": "index.html",
+          "errorDocument": "index.html",
+          "headers": [
+            {
+              "path": "/*",
+              "headers": [
+                {
+                  "key": "Cache-Control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "X-Content-Type-Options",
+                  "value": "nosniff"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  }
+}

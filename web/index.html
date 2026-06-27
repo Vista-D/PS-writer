@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personal Statement 文书素材问卷</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --card-bg: #ffffff;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --primary: #3498db;
+    --primary-dark: #2980b9;
+    --accent: #e74c3c;
+    --border: #e0e4e8;
+    --shadow: rgba(0,0,0,0.08);
+    --section-bg: #f8f9fa;
+    --highlight: #eaf2f8;
+    --input-bg: #ffffff;
+    --input-border: #d1d5db;
+  }
+  body.dark {
+    --bg: #1a1a2e;
+    --card-bg: #16213e;
+    --text: #e8e8e8;
+    --text-light: #a0a0b0;
+    --primary: #4facfe;
+    --primary-dark: #3d8ed9;
+    --accent: #ff6b6b;
+    --border: #2a2a4a;
+    --shadow: rgba(0,0,0,0.3);
+    --section-bg: #1e2a45;
+    --highlight: #1e3a5f;
+    --input-bg: #1e2a45;
+    --input-border: #3a4a6a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    transition: background 0.3s, color 0.3s;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 30px 20px 60px; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 40px 20px;
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 16px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header h1 { font-size: 28px; margin-bottom: 8px; position: relative; }
+  .header p { font-size: 14px; opacity: 0.9; position: relative; }
+  .header .progress-text { font-size: 13px; opacity: 0.85; margin-top: 12px; }
+
+  /* Theme toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: all 0.3s;
+    color: var(--text);
+  }
+  .theme-toggle:hover { transform: scale(1.1); }
+
+  /* Type Selection */
+  .type-selection {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .type-selection h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .type-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .type-option {
+    padding: 24px 20px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s;
+    background: var(--section-bg);
+  }
+  .type-option:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .type-option.active {
+    border-color: var(--primary);
+    background: var(--highlight);
+    box-shadow: 0 0 0 3px rgba(52,152,219,0.2);
+  }
+  .type-option .icon { font-size: 36px; margin-bottom: 10px; display: block; }
+  .type-option .label { font-size: 16px; font-weight: 600; }
+  .type-option .desc { font-size: 12px; color: var(--text-light); margin-top: 6px; }
+
+  /* Save Settings */
+  .save-settings {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .save-settings h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .save-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+  }
+  .save-row label {
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 80px;
+  }
+  .save-row input, .save-row select {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .save-row input:focus, .save-row select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(52,152,219,0.15);
+  }
+  .btn-browse {
+    padding: 8px 16px;
+    background: var(--section-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+  .btn-browse:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  /* Sections */
+  .section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border);
+  }
+  .section-number {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .section-title { font-size: 18px; font-weight: 600; flex: 1; }
+  .section-desc { font-size: 12px; color: var(--text-light); }
+
+  /* Questions */
+  .question {
+    margin-bottom: 24px;
+    padding: 16px 20px;
+    background: var(--section-bg);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
+    transition: all 0.2s;
+  }
+  .question:last-child { margin-bottom: 0; }
+  .question:hover { box-shadow: 0 2px 8px var(--shadow); }
+  .q-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .q-number {
+    font-size: 11px;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+  .q-text {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .q-hint {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 4px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  .q-input textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    margin-top: 10px;
+    font-family: inherit;
+    background: var(--input-bg);
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .q-input textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(52,152,219,0.15);
+  }
+  .q-input textarea.char-count { border-color: var(--accent); }
+  .char-limit {
+    font-size: 11px;
+    color: var(--text-light);
+    text-align: right;
+    margin-top: 4px;
+  }
+  .char-limit.over { color: var(--accent); font-weight: 600; }
+
+  /* Progress bar */
+  .progress-bar-container {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+    padding: 12px 0;
+    margin-bottom: 20px;
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* Bottom actions */
+  .actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    box-shadow: 0 -4px 20px var(--shadow);
+    z-index: 50;
+  }
+  .actions button {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(52,152,219,0.4); }
+  .btn-secondary {
+    background: var(--section-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-success {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: #fff;
+  }
+  .btn-success:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(39,174,96,0.4); }
+  .btn-danger {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(231,76,60,0.4); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal h2 { margin-bottom: 16px; font-size: 18px; }
+  .modal textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    background: var(--input-bg);
+    color: var(--text);
+    resize: vertical;
+  }
+  .modal textarea:focus { outline: none; border-color: var(--primary); }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    justify-content: flex-end;
+  }
+
+  /* Response */
+  .response-area {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px 30px;
+    margin-top: 24px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1px solid var(--border);
+    display: none;
+  }
+  .response-area.show { display: block; }
+  .response-area h3 { font-size: 16px; margin-bottom: 12px; }
+  .response-area pre {
+    background: var(--section-bg);
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .container { padding: 16px 12px 80px; }
+    .header { padding: 28px 16px; }
+    .header h1 { font-size: 22px; }
+    .type-options { grid-template-columns: 1fr; }
+    .section { padding: 20px 16px; }
+    .question { padding: 12px 14px; }
+    .actions { padding: 12px 16px; }
+    .actions button { flex: 1; min-width: 0; font-size: 13px; padding: 10px 12px; }
+    .save-row { flex-direction: column; align-items: stretch; }
+    .save-row input, .save-row select { min-width: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">🌙</div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>📝 Personal Statement 文书素材采集</h1>
+    <p>请用中文详细回答以下问题。答案越具体，生成的文书质量越高。</p>
+    <div class="progress-text" id="progressText">已完成 0 / 30 题</div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-container">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- Type Selection -->
+  <div class="type-selection" id="typeSection">
+    <h2>🎯 请选择你要申请的文书类型</h2>
+    <div class="type-options">
+      <div class="type-option" data-type="ucas" onclick="selectType('ucas')">
+        <span class="icon">🇬🇧</span>
+        <div class="label">英国 UCAS 本科</div>
+        <div class="desc">UCAS Personal Statement，适用于英国本科申请<br>4000字符以内，约47行</div>
+      </div>
+      <div class="type-option" data-type="hongkong" onclick="selectType('hongkong')">
+        <span class="icon">🇭🇰</span>
+        <div class="label">香港大学</div>
+        <div class="desc">香港大学个人陈述，适用于港大/港中文/港科大等<br>500-1000词，需说明 Why Hong Kong</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Settings -->
+  <div class="save-settings">
+    <h3>⚙️ 导出设置</h3>
+    <div class="save-row">
+      <label>保存格式</label>
+      <select id="saveFormat">
+        <option value="docx">Word 文档 (.docx)</option>
+        <option value="txt">纯文本 (.txt)</option>
+        <option value="json">JSON 数据 (.json)</option>
+      </select>
+    </div>
+    <div class="save-row" style="margin-top:12px;">
+      <label>保存路径</label>
+      <input type="text" id="savePath" placeholder="默认：桌面 / Personal_Statement..." value="">
+      <button class="btn-browse" onclick="setDefaultPath()">📁 设为桌面</button>
+    </div>
+    <div class="save-row" style="margin-top:8px;">
+      <label>申请人姓名</label>
+      <input type="text" id="applicantName" placeholder="请输入你的英文姓名 (如: Zhang San)">
+    </div>
+  </div>
+
+  <!-- Questionnaire Sections -->
+  <div id="questionnaire">
+
+    <!-- Section 1: Basic Info -->
+    <div class="section" data-section="1">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <div class="section-title">基本信息</div>
+        <div class="section-desc">让我先了解你的基本情况</div>
+      </div>
+
+      <div class="question" data-q="1">
+        <div class="q-label">
+          <div class="q-text">你的目标大学和目标专业是什么？</div>
+          <div class="q-number">Q1/30</div>
+        </div>
+        <div class="q-hint">请列出你想申请的大学全称和专业名称。如果是 UCAS 可以填多个志愿。例：University of Cambridge, Computer Science</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,1)" data-char-id="c1"></textarea></div>
+        <div class="char-limit" id="c1">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="2">
+        <div class="q-label">
+          <div class="q-text">你目前就读的学校和课程是什么？</div>
+          <div class="q-number">Q2/30</div>
+        </div>
+        <div class="q-hint">如：北京四中, A-Level / 人大附中, IB Diploma / 清华大学, 本科大三</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,2)" data-char-id="c2"></textarea></div>
+        <div class="char-limit" id="c2">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="3">
+        <div class="q-label">
+          <div class="q-text">你的目标入学年份是？</div>
+          <div class="q-number">Q3/30</div>
+        </div>
+        <div class="q-hint">如：2025年秋季 / 2026年秋季</div>
+        <div class="q-input"><textarea rows="1" oninput="countChars(this,3)" data-char-id="c3"></textarea></div>
+        <div class="char-limit" id="c3">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="4">
+        <div class="q-label">
+          <div class="q-text">你的英语水平如何？（标化成绩）</div>
+          <div class="q-number">Q4/30</div>
+        </div>
+        <div class="q-hint">IELTS/TOEFL/PTE 等成绩。如：IELTS 7.5 (阅读8.5, 听力8.0, 写作6.5, 口语7.0)</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,4)" data-char-id="c4"></textarea></div>
+        <div class="char-limit" id="c4">已输入 0 字</div>
+      </div>
+    </div>
+
+    <!-- Section 2: Academic Interest Origin -->
+    <div class="section" data-section="2">
+      <div class="section-header">
+        <div class="section-number">2</div>
+        <div class="section-title">学术兴趣起源</div>
+        <div class="section-desc">你对这个专业的热情从何而来</div>
+      </div>
+
+      <div class="question" data-q="5">
+        <div class="q-label">
+          <div class="q-text">你为什么选择这个专业？请用一段话描述你的兴趣来源。</div>
+          <div class="q-number">Q5/30</div>
+        </div>
+        <div class="q-hint">不要只说"感兴趣"，要讲一个具体的故事或契机。如：某次实验、某本书、某个老师的课、某次参观等</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,5)" data-char-id="c5"></textarea></div>
+        <div class="char-limit" id="c5">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="6">
+        <div class="q-label">
+          <div class="q-text">有没有一个具体的经历、事件、书籍或人物激发了你对这个专业的热情？</div>
+          <div class="q-number">Q6/30</div>
+        </div>
+        <div class="q-hint">描述具体的细节：时间、地点、你当时的感受、你做了什么。这是 PS 开头的最佳素材！</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,6)" data-char-id="c6"></textarea></div>
+        <div class="char-limit" id="c6">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="7">
+        <div class="q-label">
+          <div class="q-text">这个专业中最吸引你的细分方向或话题是什么？</div>
+          <div class="q-number">Q7/30</div>
+        </div>
+        <div class="q-hint">如：计算机专业中对人工智能/机器学习感兴趣；经济学中对行为经济学感兴趣</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,7)" data-char-id="c7"></textarea></div>
+        <div class="char-limit" id="c7">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="8">
+        <div class="q-label">
+          <div class="q-text">你读过哪些与专业相关的课外书籍、文章或学术论文？</div>
+          <div class="q-number">Q8/30</div>
+        </div>
+        <div class="q-hint">列出书名/标题、作者、你的主要收获。如：Richard Dawkins《The Selfish Gene》让我重新理解了...</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,8)" data-char-id="c8"></textarea></div>
+        <div class="char-limit" id="c8">已输入 0 字</div>
+      </div>
+    </div>
+
+    <!-- Section 3: Academic Experience -->
+    <div class="section" data-section="3">
+      <div class="section-header">
+        <div class="section-number">3</div>
+        <div class="section-title">课内学术经历</div>
+        <div class="section-desc">展示你的学术能力和成绩</div>
+      </div>
+
+      <div class="question" data-q="9">
+        <div class="q-label">
+          <div class="q-text">你学了哪些与申请专业相关的课程？成绩如何？</div>
+          <div class="q-number">Q9/30</div>
+        </div>
+        <div class="q-hint">列出具体科目和成绩/等级。如：A-Level Mathematics (A*), Further Mathematics (A), Physics (A*)</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,9)" data-char-id="c9"></textarea></div>
+        <div class="char-limit" id="c9">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="10">
+        <div class="q-label">
+          <div class="q-text">哪门课或哪个知识点让你印象最深？学到了什么独特的见解？</div>
+          <div class="q-number">Q10/30</div>
+        </div>
+        <div class="q-hint">不要只报课名，要讲具体的知识点和你的思考。如：在物理课上学到量子力学的不确定性原理后，我认识到...</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,10)" data-char-id="c10"></textarea></div>
+        <div class="char-limit" id="c10">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="11">
+        <div class="q-label">
+          <div class="q-text">你有没有做过与专业相关的项目、研究或论文？</div>
+          <div class="q-number">Q11/30</div>
+        </div>
+        <div class="q-hint">EPQ项目、课程研究、独立项目等。描述项目内容、你的角色、成果和收获</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,11)" data-char-id="c11"></textarea></div>
+        <div class="char-limit" id="c11">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="12">
+        <div class="q-label">
+          <div class="q-text">你参加过哪些学科竞赛？取得了什么成绩？</div>
+          <div class="q-number">Q12/30</div>
+        </div>
+        <div class="q-hint">如：AMC12 前5%、BPhO 银奖、全国高中生数学竞赛省一等奖、UKCHO 金奖等</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,12)" data-char-id="c12"></textarea></div>
+        <div class="char-limit" id="c12">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="13">
+        <div class="q-label">
+          <div class="q-text">你掌握了哪些与专业相关的硬技能？</div>
+          <div class="q-number">Q13/30</div>
+        </div>
+        <div class="q-hint">如：Python编程、数据分析、实验操作、CAD设计、统计软件(SPSS/R)、文献检索等</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,13)" data-char-id="c13"></textarea></div>
+        <div class="char-limit" id="c13">已输入 0 字</div>
+      </div>
+    </div>
+
+    <!-- Section 4: Extracurricular & Practice -->
+    <div class="section" data-section="4">
+      <div class="section-header">
+        <div class="section-number">4</div>
+        <div class="section-title">课外拓展与实践</div>
+        <div class="section-desc">展示你的综合素质和实践能力</div>
+      </div>
+
+      <div class="question" data-q="14">
+        <div class="q-label">
+          <div class="q-text">你有过与专业相关的实习或工作经历吗？具体做了什么？</div>
+          <div class="q-number">Q14/30</div>
+        </div>
+        <div class="q-hint">如：在科技公司实习做数据分析、在医院做志愿者、在律所当见习生等</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,14)" data-char-id="c14"></textarea></div>
+        <div class="char-limit" id="c14">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="15">
+        <div class="q-label">
+          <div class="q-text">你参与过科研项目吗？你的角色和贡献是什么？</div>
+          <div class="q-number">Q15/30</div>
+        </div>
+        <div class="q-hint">如：暑期科研项目、大学实验室经历、与教授合作的研究等</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,15)" data-char-id="c15"></textarea></div>
+        <div class="char-limit" id="c15">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="16">
+        <div class="q-label">
+          <div class="q-text">你参加过哪些社团或学生会活动？担任过什么职务？</div>
+          <div class="q-number">Q16/30</div>
+        </div>
+        <div class="q-hint">如：辩论社社长、学生会副主席、模联代表、编程社创始人等</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,16)" data-char-id="c16"></textarea></div>
+        <div class="char-limit" id="c16">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="17">
+        <div class="q-label">
+          <div class="q-text">你有过志愿服务或社会公益经历吗？对你有什么影响？</div>
+          <div class="q-number">Q17/30</div>
+        </div>
+        <div class="q-hint">描述具体的志愿活动：支教、敬老院、动物保护、社区服务等。重点说明你的感受和成长</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,17)" data-char-id="c17"></textarea></div>
+        <div class="char-limit" id="c17">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="18">
+        <div class="q-label">
+          <div class="q-text">你有过跨文化交流或国际经历吗？</div>
+          <div class="q-number">Q18/30</div>
+        </div>
+        <div class="q-hint">如：出国交换、海外夏令营、国际竞赛、线上跨国合作项目等。对申请香港尤其重要</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,18)" data-char-id="c18"></textarea></div>
+        <div class="char-limit" id="c18">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="19">
+        <div class="q-label">
+          <div class="q-text">请举例说明你的领导力经历。</div>
+          <div class="q-number">Q19/30</div>
+        </div>
+        <div class="q-hint">描述具体事件：你带领团队做了什么、遇到了什么困难、如何解决的、结果如何</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,19)" data-char-id="c19"></textarea></div>
+        <div class="char-limit" id="c19">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="20">
+        <div class="q-label">
+          <div class="q-text">请举例说明你在团队合作中发挥重要作用的经历。</div>
+          <div class="q-number">Q20/30</div>
+        </div>
+        <div class="q-hint">团队项目、小组作业、社团活动等。说明你在团队中的角色和具体贡献</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,20)" data-char-id="c20"></textarea></div>
+        <div class="char-limit" id="c20">已输入 0 字</div>
+      </div>
+    </div>
+
+    <!-- Section 5: Personal Traits & Motivation -->
+    <div class="section" data-section="5">
+      <div class="section-header">
+        <div class="section-number">5</div>
+        <div class="section-title">个人特质与动机</div>
+        <div class="section-desc">展示你的独特性和为什么选择这个目标</div>
+      </div>
+
+      <div class="question" data-q="21">
+        <div class="q-label">
+          <div class="q-text">你认为自己最大的三个优点是什么？请用事例支撑。</div>
+          <div class="q-number">Q21/30</div>
+        </div>
+        <div class="q-hint">不要只说"我勤奋"、"我聪明"。要用具体事例证明。如：坚持每天写代码2小时持续一年、辩论赛备赛通宵等</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,21)" data-char-id="c21"></textarea></div>
+        <div class="char-limit" id="c21">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="22">
+        <div class="q-label">
+          <div class="q-text">描述一次你克服困难或挑战的经历及收获。</div>
+          <div class="q-number">Q22/30</div>
+        </div>
+        <div class="q-hint">这展示了你的 resilience（韧性）。可以是学业上的、生活中的、竞赛中的挑战</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,22)" data-char-id="c22"></textarea></div>
+        <div class="char-limit" id="c22">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="23">
+        <div class="q-label">
+          <div class="q-text">你为什么要去英国/香港留学？你对目标国家/地区有什么了解？</div>
+          <div class="q-number">Q23/30</div>
+        </div>
+        <div class="q-hint">如果是香港：香港的国际化环境、中西文化交融、教育体系特点等。如果是英国：学术传统、教学方式等</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,23)" data-char-id="c23"></textarea></div>
+        <div class="char-limit" id="c23">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="24">
+        <div class="q-label">
+          <div class="q-text">你为什么选择这所大学？它的什么特色吸引你？</div>
+          <div class="q-number">Q24/30</div>
+        </div>
+        <div class="q-hint">具体到课程设置、教授研究方向、学校资源、实验室设施等。展示你做了充分的研究</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,24)" data-char-id="c24"></textarea></div>
+        <div class="char-limit" id="c24">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="25">
+        <div class="q-label">
+          <div class="q-text">你毕业后的职业规划是什么？</div>
+          <div class="q-number">Q25/30</div>
+        </div>
+        <div class="q-hint">短期和长期目标。如：毕业后进入投行做分析师，长期目标是成为基金经理/创业</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,25)" data-char-id="c25"></textarea></div>
+        <div class="char-limit" id="c25">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="26">
+        <div class="q-label">
+          <div class="q-text">你认为你能为大学的社区带来什么独特的贡献？</div>
+          <div class="q-number">Q26/30</div>
+        </div>
+        <div class="q-hint">你的独特经历、文化背景、特殊技能、与众不同的视角等。香港大学尤其看重这一点</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,26)" data-char-id="c26"></textarea></div>
+        <div class="char-limit" id="c26">已输入 0 字</div>
+      </div>
+    </div>
+
+    <!-- Section 6: Additional Info -->
+    <div class="section" data-section="6">
+      <div class="section-header">
+        <div class="section-number">6</div>
+        <div class="section-title">补充信息</div>
+        <div class="section-desc">还有什么想说的？</div>
+      </div>
+
+      <div class="question" data-q="27">
+        <div class="q-label">
+          <div class="q-text">以上没有覆盖到但你认为重要的经历或信息是什么？</div>
+          <div class="q-number">Q27/30</div>
+        </div>
+        <div class="q-hint">任何你认为对申请有帮助但前面没来得及说的内容</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,27)" data-char-id="c27"></textarea></div>
+        <div class="char-limit" id="c27">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="28">
+        <div class="q-label">
+          <div class="q-text">你的成长背景或家庭环境如何塑造了现在的你？</div>
+          <div class="q-number">Q28/30</div>
+        </div>
+        <div class="q-hint">特别对于香港申请，这部分可以展示你的独特视角。如：父母的职业影响了你的兴趣、成长环境让你有了不同的世界观</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,28)" data-char-id="c28"></textarea></div>
+        <div class="char-limit" id="c28">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="29">
+        <div class="q-label">
+          <div class="q-text">你有什么特别的兴趣爱好或特长？是否与专业有联系？</div>
+          <div class="q-number">Q29/30</div>
+        </div>
+        <div class="q-hint">如：弹钢琴培养了纪律性、马拉松锻炼了毅力、摄影培养了观察力等。可以尝试找到与专业的连接</div>
+        <div class="q-input"><textarea rows="2" oninput="countChars(this,29)" data-char-id="c29"></textarea></div>
+        <div class="char-limit" id="c29">已输入 0 字</div>
+      </div>
+
+      <div class="question" data-q="30">
+        <div class="q-label">
+          <div class="q-text">最后，还有什么想补充的吗？任何想对招生官说的话。</div>
+          <div class="q-number">Q30/30</div>
+        </div>
+        <div class="q-hint">自由发挥，可以是对自己申请的总结、特别的感受、想要强调的重点</div>
+        <div class="q-input"><textarea rows="3" oninput="countChars(this,30)" data-char-id="c30"></textarea></div>
+        <div class="char-limit" id="c30">已输入 0 字</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Actions -->
+  <div class="actions">
+    <button class="btn-secondary" onclick="clearAll()">🗑️ 清空所有</button>
+    <button class="btn-secondary" onclick="scrollToTop()">⬆️ 回到顶部</button>
+    <button class="btn-success" onclick="exportJSON()">📤 导出答案 (JSON)</button>
+  </div>
+
+  <!-- Response Area -->
+  <div class="response-area" id="responseArea">
+    <h3>📋 导出的答案</h3>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:10px;">
+      请复制下方 JSON 并发送给 AI，AI 将根据你的答案生成 Personal Statement。
+      注意：如果选择了 .docx 格式，AI 会调用脚本帮你生成 Word 文档。
+    </p>
+    <pre id="responsePre"></pre>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn-primary" onclick="copyResponse()">📋 复制</button>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <h2>✅ 导出成功！</h2>
+    <p style="margin-bottom:16px;color:var(--text-light);">你的答案已准备好。请复制以下 JSON 并发送给 AI。</p>
+    <textarea id="modalOutput" readonly></textarea>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">关闭</button>
+      <button class="btn-primary" onclick="copyModal()">📋 复制 JSON</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============ State ============
+  let selectedType = '';
+  const totalQuestions = 30;
+
+  // ============ Theme ============
+  function toggleTheme() {
+    document.body.classList.toggle('dark');
+    const btn = document.getElementById('themeToggle');
+    btn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+  }
+
+  // ============ Type Selection ============
+  function selectType(type) {
+    selectedType = type;
+    document.querySelectorAll('.type-option').forEach(el => {
+      el.classList.toggle('active', el.dataset.type === type);
+    });
+  }
+
+  function getSelectedType() {
+    const active = document.querySelector('.type-option.active');
+    return active ? active.dataset.type : null;
+  }
+
+  // ============ Save Settings ============
+  function setDefaultPath() {
+    const name = document.getElementById('applicantName').value.trim() || 'Applicant';
+    const type = getSelectedType() || 'ps';
+    document.getElementById('savePath').value = `C:\\Users\\Lenovo\\Desktop\\Personal_Statement_${type}_${name.replace(/\\s+/g,'_')}.docx`;
+  }
+
+  // ============ Char Count ============
+  function countChars(textarea, qNum) {
+    const count = textarea.value.length;
+    const el = document.getElementById('c' + qNum);
+    if (el) {
+      el.textContent = `已输入 ${count} 字`;
+      textarea.classList.toggle('char-count', count > 500);
+      el.classList.toggle('over', count > 500);
+    }
+    updateProgress();
+  }
+
+  // ============ Progress ============
+  function updateProgress() {
+    let answered = 0;
+    for (let i = 1; i <= totalQuestions; i++) {
+      const ta = document.querySelector(`.question[data-q="${i}"] textarea`);
+      if (ta && ta.value.trim().length > 0) answered++;
+    }
+    const pct = Math.round((answered / totalQuestions) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressText').textContent = `已完成 ${answered} / ${totalQuestions} 题`;
+  }
+
+  // ============ Collect Data ============
+  function collectData() {
+    const type = getSelectedType();
+    if (!type) {
+      alert('请先选择文书类型（英国UCAS / 香港大学）！');
+      return null;
+    }
+
+    const questions = [];
+    for (let i = 1; i <= totalQuestions; i++) {
+      const qDiv = document.querySelector(`.question[data-q="${i}"]`);
+      if (!qDiv) continue;
+      const textEl = qDiv.querySelector('.q-text');
+      const textarea = qDiv.querySelector('textarea');
+      questions.push({
+        id: i,
+        question: textEl ? textEl.textContent.trim() : '',
+        answer: textarea ? textarea.value.trim() : ''
+      });
+    }
+
+    const name = document.getElementById('applicantName').value.trim();
+    const format = document.getElementById('saveFormat').value;
+    const path = document.getElementById('savePath').value.trim();
+
+    return {
+      metadata: {
+        type: type,
+        applicantName: name || '',
+        saveFormat: format,
+        savePath: path || '',
+        exportTime: new Date().toLocaleString('zh-CN')
+      },
+      questions: questions
+    };
+  }
+
+  // ============ Export JSON ============
+  function exportJSON() {
+    const data = collectData();
+    if (!data) return;
+
+    const jsonStr = JSON.stringify(data, null, 2);
+    
+    // Show in modal
+    document.getElementById('modalOutput').value = jsonStr;
+    document.getElementById('successModal').classList.add('show');
+    
+    // Also show in response area
+    document.getElementById('responsePre').textContent = jsonStr;
+    document.getElementById('responseArea').classList.add('show');
+    
+    // Trigger download
+    const type = getSelectedType() || 'ps';
+    const name = document.getElementById('applicantName').value.trim() || 'Applicant';
+    const safeName = name.replace(/\\s+/g, '_');
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `PS_Questionnaire_${type}_${safeName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 300);
+  }
+
+  // ============ Modal ============
+  function closeModal() {
+    document.getElementById('successModal').classList.remove('show');
+  }
+  function copyModal() {
+    const text = document.getElementById('modalOutput');
+    text.select();
+    navigator.clipboard.writeText(text.value).then(() => {
+      alert('JSON 已复制到剪贴板！');
+    });
+  }
+  function copyResponse() {
+    const text = document.getElementById('responsePre').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('JSON 已复制到剪贴板！');
+    });
+  }
+
+  // ============ Utility ============
+  function clearAll() {
+    if (!confirm('确定要清空所有内容吗？')) return;
+    document.querySelectorAll('textarea').forEach(ta => ta.value = '');
+    document.querySelectorAll('.char-limit').forEach(el => {
+      el.textContent = '已输入 0 字';
+      el.classList.remove('over');
+    });
+    document.getElementById('applicantName').value = '';
+    document.getElementById('savePath').value = '';
+    selectedType = '';
+    document.querySelectorAll('.type-option').forEach(el => el.classList.remove('active'));
+    document.getElementById('responseArea').classList.remove('show');
+    document.getElementById('successModal').classList.remove('show');
+    updateProgress();
+  }
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ============ Init ============
+  updateProgress();
+</script>
+
+</body>
+</html>
