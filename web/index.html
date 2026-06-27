@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Personal Statement 文书素材问卷</title>
+<title>PS文书助手 - 一键生成 Personal Statement</title>
+<!-- 引入 FileSaver.js 用于文件下载 -->
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <style>
   :root {
     --bg: #f5f7fa;
@@ -422,7 +424,7 @@
 
   /* Responsive */
   @media (max-width: 640px) {
-    .container { padding: 16px 12px 80px; }
+    .container { padding: 16px 12px 120px; }
     .header { padding: 28px 16px; }
     .header h1 { font-size: 22px; }
     .type-options { grid-template-columns: 1fr; }
@@ -432,6 +434,135 @@
     .actions button { flex: 1; min-width: 0; font-size: 13px; padding: 10px 12px; }
     .save-row { flex-direction: column; align-items: stretch; }
     .save-row input, .save-row select { min-width: 0; }
+  }
+
+  /* ====== Generate Section (NEW) ====== */
+  .generate-section {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 24px;
+    color: #fff;
+    text-align: center;
+  }
+  body.dark .generate-section {
+    background: linear-gradient(135deg, #4a5fa8, #5c3d8a);
+  }
+  .generate-section h2 { font-size: 22px; margin-bottom: 8px; }
+  .generate-section p { font-size: 14px; opacity: 0.9; margin-bottom: 20px; }
+  .generate-section .btn-generate {
+    padding: 14px 40px;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #fff;
+    color: #667eea;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  .generate-section .btn-generate:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+  .generate-section .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  body.dark .generate-section .btn-generate { color: #4a5fa8; }
+  .generate-section .btn-generate .spinner {
+    display: none;
+    width: 20px; height: 20px;
+    border: 3px solid rgba(102,126,234,0.3);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PS Preview */
+  .ps-preview {
+    display: none;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .ps-preview.show { display: block; }
+  .ps-preview h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ps-preview .ps-content {
+    background: var(--section-bg);
+    padding: 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    color: var(--text);
+    margin-bottom: 16px;
+    font-family: 'Georgia', 'Times New Roman', serif;
+  }
+  .ps-preview .ps-stats {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+  .ps-preview .ps-stats .stat {
+    background: var(--highlight);
+    padding: 6px 14px;
+    border-radius: 20px;
+    color: var(--text);
+  }
+  .ps-preview .ps-stats .stat.warning { background: #fff3cd; color: #856404; }
+
+  /* Download & Share Buttons */
+  .ps-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ps-actions button {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .ps-actions button:hover { transform: translateY(-2px); }
+  .btn-download {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: #fff;
+  }
+  .btn-share {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: #fff;
+  }
+  .btn-copy-ps {
+    background: var(--section-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  @media (max-width: 640px) {
+    .ps-actions { flex-direction: column; }
+    .ps-actions button { width: 100%; }
+    .ps-preview { padding: 16px; }
+    .ps-preview .ps-content { font-size: 13px; max-height: 300px; padding: 14px; }
   }
 </style>
 </head>
@@ -850,6 +981,30 @@
         <div class="char-limit" id="c30">已输入 0 字</div>
       </div>
     </div>
+  </div> <!-- /questionnaire -->
+
+  <!-- ★ NEW: 一键生成 PS -->
+  <div class="generate-section" id="generateSection">
+    <h2>🚀 一键生成 Personal Statement</h2>
+    <p>填写完以上问卷后，点击下方按钮，AI 模板引擎自动为你生成英文 PS 草稿</p>
+    <button class="btn-generate" id="btnGenerate" onclick="generatePS()">
+      ✨ 生成我的 Personal Statement
+    </button>
+  </div>
+
+  <!-- ★ NEW: PS 预览与下载 -->
+  <div class="ps-preview" id="psPreview">
+    <h3>📄 你的 Personal Statement 草稿</h3>
+    <div class="ps-stats" id="psStats"></div>
+    <div class="ps-content" id="psContent"></div>
+    <div class="ps-actions">
+      <button class="btn-download" onclick="downloadDocx()">📥 下载 Word 文档</button>
+      <button class="btn-copy-ps" onclick="copyPSText()">📋 复制全文</button>
+      <button class="btn-share" onclick="sharePS()">📤 分享到微信</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-light);margin-top:12px;text-align:center;">
+      💡 草稿生成后，建议发送给 AI 进一步优化润色
+    </p>
   </div>
 
   <!-- Bottom Actions -->
