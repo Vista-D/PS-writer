@@ -605,23 +605,18 @@
 
   <!-- Save Settings -->
   <div class="save-settings">
-    <h3>⚙️ 导出设置</h3>
-    <div class="save-row">
-      <label>保存格式</label>
-      <select id="saveFormat">
-        <option value="docx">Word 文档 (.docx)</option>
-        <option value="txt">纯文本 (.txt)</option>
-        <option value="json">JSON 数据 (.json)</option>
-      </select>
-    </div>
-    <div class="save-row" style="margin-top:12px;">
-      <label>保存路径</label>
-      <input type="text" id="savePath" placeholder="默认：桌面 / Personal_Statement..." value="">
-      <button class="btn-browse" onclick="setDefaultPath()">📁 设为桌面</button>
-    </div>
+    <h3>⚙️ 个人信息</h3>
     <div class="save-row" style="margin-top:8px;">
       <label>申请人姓名</label>
       <input type="text" id="applicantName" placeholder="请输入你的英文姓名 (如: Zhang San)">
+    </div>
+    <div class="save-row" style="margin-top:8px;">
+      <label>保存格式</label>
+      <select id="saveFormat" style="flex:0 0 auto;">
+        <option value="docx">Word 文档 (.doc)</option>
+        <option value="txt">纯文本 (.txt)</option>
+        <option value="json">JSON 数据 (.json)</option>
+      </select>
     </div>
   </div>
 
@@ -1044,6 +1039,8 @@
 <script>
   // ============ State ============
   let selectedType = '';
+  let generatedPSText = '';
+  let generatedPSStats = {};
   const totalQuestions = 30;
 
   // ============ Theme ============
@@ -1070,7 +1067,7 @@
   function setDefaultPath() {
     const name = document.getElementById('applicantName').value.trim() || 'Applicant';
     const type = getSelectedType() || 'ps';
-    document.getElementById('savePath').value = `C:\\Users\\Lenovo\\Desktop\\Personal_Statement_${type}_${name.replace(/\\s+/g,'_')}.docx`;
+    document.getElementById('savePath').value = `Personal_Statement_${type}_${name.replace(/\s+/g,'_')}.docx`;
   }
 
   // ============ Char Count ============
@@ -1119,19 +1116,323 @@
     }
 
     const name = document.getElementById('applicantName').value.trim();
-    const format = document.getElementById('saveFormat').value;
-    const path = document.getElementById('savePath').value.trim();
 
     return {
       metadata: {
         type: type,
         applicantName: name || '',
-        saveFormat: format,
-        savePath: path || '',
         exportTime: new Date().toLocaleString('zh-CN')
       },
       questions: questions
     };
+  }
+
+  // ============ Get Answer Helper ============
+  function getAns(data, id) {
+    const q = data.questions.find(x => x.id === id);
+    return q ? q.answer.trim() : '';
+  }
+
+  // ============ Generate PS (Template Engine) ============
+  function generatePS() {
+    const data = collectData();
+    if (!data) return;
+
+    // Check if enough data
+    const answered = data.questions.filter(q => q.answer.length > 0).length;
+    if (answered < 5) {
+      alert('请至少回答 5 个问题再生成，建议填完 30 题效果最佳！');
+      return;
+    }
+
+    const btn = document.getElementById('btnGenerate');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> 正在生成...';
+
+    setTimeout(() => {
+      try {
+        const ps = data.metadata.type === 'hongkong' ? generateHKPS(data) : generateUCASPS(data);
+        generatedPSText = ps;
+        showPSPreview(ps, data);
+      } catch(e) {
+        alert('生成出错：' + e.message);
+      }
+      btn.disabled = false;
+      btn.innerHTML = '✨ 生成我的 Personal Statement';
+    }, 500);
+  }
+
+  // ---------- UCAS Generator ----------
+  function generateUCASPS(data) {
+    const n = data.metadata.applicantName || '';
+    const a1 = getAns(data,1), a2 = getAns(data,2), a3 = getAns(data,3), a4 = getAns(data,4);
+    const a5 = getAns(data,5), a6 = getAns(data,6), a7 = getAns(data,7), a8 = getAns(data,8);
+    const a9 = getAns(data,9), a10 = getAns(data,10), a11 = getAns(data,11);
+    const a12 = getAns(data,12), a13 = getAns(data,13), a14 = getAns(data,14);
+    const a15 = getAns(data,15), a16 = getAns(data,16), a17 = getAns(data,17);
+    const a18 = getAns(data,18), a19 = getAns(data,19), a20 = getAns(data,20);
+    const a21 = getAns(data,21), a22 = getAns(data,22), a23 = getAns(data,23);
+    const a24 = getAns(data,24), a25 = getAns(data,25), a26 = getAns(data,26);
+    const a27 = getAns(data,27), a28 = getAns(data,28), a29 = getAns(data,29), a30 = getAns(data,30);
+
+    const major = a1 || 'your chosen subject';
+    const trigger = a6 || a5 || 'a specific moment';
+    const school = a2 || 'my school';
+    const courseInfo = a9 || 'relevant courses';
+    const insight = a10 || '';
+    const skill = a13 || '';
+    const interest = a7 || '';
+    const books = a8 || '';
+    const project = a11 || '';
+    const competition = a12 || '';
+    const internship = a14 || '';
+    const research = a15 || '';
+    const club = a16 || '';
+    const volunteer = a17 || '';
+    const leadership = a19 || '';
+    const career = a25 || '';
+    const whyStudy = a23 || '';
+    const hobby = a29 || '';
+    const background = a28 || '';
+
+    // Build paragraphs
+    let ps = '';
+
+    // Para 1: Hook
+    ps += `My fascination with ${major} began with ${trigger}. `;
+    ps += `This moment transformed my casual curiosity into a genuine determination to explore this field at a deeper level, and has shaped my academic journey ever since.\n\n`;
+
+    // Para 2: Academic
+    ps += `Studying at ${school}, I have undertaken ${courseInfo}. `;
+    if (insight) ps += `${insight} `;
+    if (skill) ps += `Through these studies, I have developed skills including ${skill}. `;
+    ps += `This strong academic foundation has prepared me to engage with university-level study in ${major}.\n\n`;
+
+    // Para 3: Extension
+    if (interest) ps += `I am particularly drawn to ${interest}. `;
+    if (books) ps += `To deepen my understanding, I read ${books}. `;
+    if (project) ps += `I undertook projects such as ${project}, which gave me hands-on experience. `;
+    if (competition) ps += `I also participated in ${competition}, which sharpened my analytical and problem-solving abilities. `;
+    ps += `These experiences have significantly extended my knowledge beyond the classroom.\n\n`;
+
+    // Para 4: Practice
+    if (internship) ps += `My internship experience at ${internship} provided valuable insight into how the field operates in practice. `;
+    if (research) ps += `I also engaged in research on ${research}. `;
+    if (club) ps += `At school, I have been actively involved in ${club}. `;
+    if (volunteer) ps += `Volunteering through ${volunteer} taught me the importance of communication and empathy. `;
+    if (leadership) ps += `${leadership} `;
+    ps += `These experiences have developed my ability to work effectively in teams and communicate complex ideas clearly.\n\n`;
+
+    // Para 5: Conclusion
+    ps += `Looking ahead, my ambition is to ${career || 'pursue a career in ' + major}. `;
+    if (whyStudy) ps += `${whyStudy} `;
+    ps += `I am excited by the prospect of studying ${major} at university — not only to acquire technical expertise, but to understand how I can contribute to this ever-evolving field. `;
+    if (hobby) ps += `Outside of academics, ${hobby} has taught me discipline and perseverance. `;
+    ps += `I am ready to embrace the challenges of higher education and make the most of every opportunity to learn and grow.`;
+
+    return ps;
+  }
+
+  // ---------- Hong Kong Generator ----------
+  function generateHKPS(data) {
+    const n = data.metadata.applicantName || '';
+    const a1 = getAns(data,1), a2 = getAns(data,2), a3 = getAns(data,3), a4 = getAns(data,4);
+    const a5 = getAns(data,5), a6 = getAns(data,6), a7 = getAns(data,7), a8 = getAns(data,8);
+    const a9 = getAns(data,9), a10 = getAns(data,10), a11 = getAns(data,11);
+    const a12 = getAns(data,12), a13 = getAns(data,13), a14 = getAns(data,14);
+    const a15 = getAns(data,15), a16 = getAns(data,16), a17 = getAns(data,17);
+    const a18 = getAns(data,18), a19 = getAns(data,19), a20 = getAns(data,20);
+    const a21 = getAns(data,21), a22 = getAns(data,22), a23 = getAns(data,23);
+    const a24 = getAns(data,24), a25 = getAns(data,25), a26 = getAns(data,26);
+    const a27 = getAns(data,27), a28 = getAns(data,28), a29 = getAns(data,29), a30 = getAns(data,30);
+
+    const major = a1 || 'your chosen subject';
+    const uniInfo = a24 || 'your target university';
+    const trigger = a6 || a5 || 'a specific moment';
+    const school = a2 || 'my school';
+    const courseInfo = a9 || 'relevant courses';
+    const insight = a10 || '';
+    const skill = a13 || '';
+    const interest = a7 || '';
+    const project = a11 || '';
+    const competition = a12 || '';
+    const internship = a14 || '';
+    const research = a15 || '';
+    const club = a16 || '';
+    const volunteer = a17 || '';
+    const crossCulture = a18 || '';
+    const leadership = a19 || '';
+    const career = a25 || '';
+    const whyHK = a23 || '';
+    const contribution = a26 || '';
+    const hobby = a29 || '';
+    const background = a28 || '';
+
+    let ps = '';
+
+    // Para 1: Motivation
+    ps += `My decision to pursue ${major} at a Hong Kong university stems from ${trigger}. `;
+    if (whyHK) ps += `${whyHK} `;
+    if (uniInfo) ps += `${uniInfo} `;
+    ps += `I believe Hong Kong\'s unique position as an international hub, where Eastern and Western academic traditions converge, provides the ideal environment for my intellectual development.\n\n`;
+
+    // Para 2: Academic
+    ps += `At ${school}, I have studied ${courseInfo}. `;
+    if (insight) ps += `${insight} `;
+    if (skill) ps += `My academic training has equipped me with ${skill}. `;
+    if (project) ps += `I have also completed projects including ${project}. `;
+    if (competition) ps += `Participating in ${competition} has strengthened my academic confidence.`;
+    ps += `\n\n`;
+
+    // Para 3: Practice
+    if (internship) ps += `Beyond the classroom, I gained practical experience through ${internship}. `;
+    if (research) ps += `I contributed to research on ${research}. `;
+    if (club) ps += `School activities such as ${club} have developed my organisational skills. `;
+    if (volunteer) ps += `My volunteer work with ${volunteer} fostered a sense of social responsibility. `;
+    if (leadership) ps += `${leadership} `;
+    ps += `\n\n`;
+
+    // Para 4: Personal Qualities
+    ps += `My personal background has shaped who I am today. `;
+    if (background) ps += `${background} `;
+    if (crossCulture) ps += `${crossCulture} `;
+    if (contribution) ps += `I believe I can contribute to the university community through ${contribution}. `;
+    if (hobby) ps += `${hobby} `;
+    ps += `\n\n`;
+
+    // Para 5: Future
+    ps += `My long-term goal is to ${career || 'build a career in ' + major}. `;
+    ps += `I am confident that studying in Hong Kong will not only provide me with a rigorous academic education but also broaden my global perspective. I look forward to growing as both a scholar and a global citizen, and to bringing my unique perspective to the university community.`;
+
+    return ps;
+  }
+
+  // ============ Show PS Preview ============
+  function showPSPreview(ps, data) {
+    const charNoSpace = ps.replace(/ /g, '').length;
+    const charTotal = ps.length;
+    const words = ps.split(/\s+/).filter(w => w.length > 0).length;
+    const lines = ps.split('\n').length;
+
+    const stats = document.getElementById('psStats');
+    const type = data.metadata.type;
+    let statsHTML = '';
+
+    if (type === 'ucas') {
+      statsHTML = `
+        <span class="stat">📊 字符(不计空格): ${charNoSpace} / 4000 ${charNoSpace > 4000 ? '⚠️' : '✅'}</span>
+        <span class="stat ${charNoSpace > 4000 ? 'warning' : ''}">📏 总字符: ${charTotal}</span>
+        <span class="stat">📃 行数: ${lines} / 47 ${lines > 47 ? '⚠️' : '✅'}</span>
+      `;
+    } else {
+      statsHTML = `
+        <span class="stat">📊 词数: ${words}</span>
+        <span class="stat">📏 字符: ${charTotal}</span>
+        <span class="stat">📃 行数: ${lines}</span>
+      `;
+    }
+
+    stats.innerHTML = statsHTML;
+    document.getElementById('psContent').textContent = ps;
+    document.getElementById('psPreview').classList.add('show');
+
+    generatedPSStats = { charNoSpace, charTotal, words, lines };
+
+    setTimeout(() => {
+      document.getElementById('psPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+  }
+
+  // ============ Download as Word (.docx via HTML) ============
+  function downloadDocx() {
+    if (!generatedPSText) { alert('请先生成 PS 再下载！'); return; }
+
+    const name = document.getElementById('applicantName').value.trim() || 'Applicant';
+    const type = getSelectedType() || 'ucas';
+    const typeLabel = type === 'ucas' ? 'UCAS Personal Statement' : 'Personal Statement for Hong Kong University';
+
+    // Create a Word-compatible HTML document
+    const htmlContent = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" 
+      xmlns:w="urn:schemas-microsoft-com:office:word" 
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<title>${typeLabel}</title>
+<style>
+  body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; margin: 2.54cm; color: #333; }
+  h1 { text-align: center; font-size: 16pt; color: #1a1a2e; }
+  .info { text-align: center; font-size: 11pt; color: #555; margin-bottom: 20px; }
+  .divider { text-align: center; color: #aaa; font-size: 10pt; margin: 10px 0; }
+  p { text-indent: 0.75cm; margin: 0 0 8pt 0; line-height: 1.5; }
+  .stats { text-align: center; font-size: 9pt; color: #888; font-style: italic; margin-top: 20px; }
+</style>
+</head>
+<body>
+<h1>${typeLabel}</h1>
+<div class="info">Applicant: ${name}</div>
+<div class="divider">${'─'.repeat(50)}</div>
+${generatedPSText.split('\n').filter(p => p.trim()).map(p => `<p>${p.trim()}</p>`).join('\n')}
+<div class="divider">${'─'.repeat(50)}</div>
+${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generatedPSStats.charNoSpace} | Total characters: ${generatedPSStats.charTotal}</div>` : `<div class="stats">Word count: ${generatedPSStats.words || generatedPSText.split(/\\s+/).length}</div>`}
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
+    const fileName = `Personal_Statement_${type}_${name.replace(/\s+/g,'_')}.doc`;
+
+    // Use FileSaver.js if available, otherwise fallback
+    if (typeof saveAs === 'function') {
+      saveAs(blob, fileName);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  // ============ Copy PS Text ============
+  function copyPSText() {
+    if (!generatedPSText) { alert('请先生成 PS！'); return; }
+    navigator.clipboard.writeText(generatedPSText).then(() => {
+      // Try native feedback
+      if (navigator.vibrate) navigator.vibrate(50);
+      alert('✅ Personal Statement 已复制到剪贴板！\n\n你可以粘贴到微信、Word 或发送给 AI 润色。');
+    }).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = generatedPSText;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert('✅ 已复制！');
+    });
+  }
+
+  // ============ Share to WeChat / Apps (Web Share API) ============
+  function sharePS() {
+    if (!generatedPSText) { alert('请先生成 PS！'); return; }
+
+    const shareData = {
+      title: '我的 Personal Statement',
+      text: generatedPSText.substring(0, 500) + '...\n\n（通过 PS文书助手 生成）',
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {});
+    } else {
+      // Fallback: copy link
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('🔗 链接已复制！请粘贴到微信分享给好友。\n\n提示：在微信中打开后，可点击右上角「...」转发给朋友。');
+      });
+    }
   }
 
   // ============ Export JSON ============
@@ -1141,18 +1442,14 @@
 
     const jsonStr = JSON.stringify(data, null, 2);
     
-    // Show in modal
     document.getElementById('modalOutput').value = jsonStr;
     document.getElementById('successModal').classList.add('show');
-    
-    // Also show in response area
     document.getElementById('responsePre').textContent = jsonStr;
     document.getElementById('responseArea').classList.add('show');
     
-    // Trigger download
     const type = getSelectedType() || 'ps';
     const name = document.getElementById('applicantName').value.trim() || 'Applicant';
-    const safeName = name.replace(/\\s+/g, '_');
+    const safeName = name.replace(/\s+/g, '_');
     const blob = new Blob([jsonStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1193,11 +1490,12 @@
       el.classList.remove('over');
     });
     document.getElementById('applicantName').value = '';
-    document.getElementById('savePath').value = '';
     selectedType = '';
     document.querySelectorAll('.type-option').forEach(el => el.classList.remove('active'));
     document.getElementById('responseArea').classList.remove('show');
     document.getElementById('successModal').classList.remove('show');
+    document.getElementById('psPreview').classList.remove('show');
+    generatedPSText = '';
     updateProgress();
   }
 
