@@ -6,8 +6,7 @@
 <title>PS文书助手 - 一键生成 Personal Statement</title>
 <!-- 引入 FileSaver.js 用于文件下载 -->
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-<!-- 引入 CloudBase SDK -->
-<script src="https://unpkg.com/@cloudbase/js-sdk@1.8.0/dist/cloudbase.umd.js"></script>
+<!-- 不需要额外 SDK，直接使用 fetch 调用 DeepSeek API -->
 <style>
   :root {
     --bg: #f5f7fa;
@@ -1963,25 +1962,81 @@ ${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generated
     document.getElementById('aiError').classList.remove('show');
   }
 
+  // ========== AI 提示词 ==========
+  function getAIPrompt(type, questions) {
+    const qMap = {};
+    questions.forEach(q => { qMap[q.id] = q.answer || ''; });
+    const get = (id) => qMap[id] || '';
+
+    let profile = '## 用户申请信息\n\n';
+    profile += `目标专业：${get(1)}\n学校/课程：${get(2)}\n`;
+    if (get(4)) profile += `英语成绩：${get(4)}\n`;
+    profile += `\n## 学术兴趣\n${get(5) || get(6)}\n`;
+    if (get(7)) profile += `\n细分方向：${get(7)}`;
+    if (get(8)) profile += `\n阅读：${get(8)}`;
+    profile += `\n\n## 学术经历\n课程：${get(9)}`;
+    if (get(10)) profile += `\n课程思考：${get(10)}`;
+    if (get(11)) profile += `\n项目：${get(11)}`;
+    if (get(12)) profile += `\n竞赛：${get(12)}`;
+    if (get(13)) profile += `\n技能：${get(13)}`;
+    profile += `\n\n## 实践\n`;
+    if (get(14)) profile += `实习：${get(14)}\n`;
+    if (get(15)) profile += `科研：${get(15)}\n`;
+    if (get(16)) profile += `社团：${get(16)}\n`;
+    if (get(17)) profile += `志愿：${get(17)}\n`;
+    if (get(18)) profile += `跨文化：${get(18)}\n`;
+    if (get(19)) profile += `领导力：${get(19)}\n`;
+    if (get(20)) profile += `团队：${get(20)}\n`;
+    profile += `\n## 个人特质\n`;
+    if (get(21)) profile += `优点：${get(21)}\n`;
+    if (get(22)) profile += `克服困难：${get(22)}\n`;
+    if (get(29)) profile += `兴趣：${get(29)}\n`;
+    if (get(28)) profile += `背景：${get(28)}\n`;
+    profile += `\n## 动机\n`;
+    if (get(23)) profile += `留学动机：${get(23)}\n`;
+    if (get(24)) profile += `选校：${get(24)}\n`;
+    if (get(25)) profile += `职业规划：${get(25)}\n`;
+
+    let sysPrompt;
+    if (type === 'ucas') {
+      sysPrompt = `你是一位资深的 UCAS Personal Statement 写作导师。请根据用户的中文信息撰写一篇英文 UCAS Personal Statement。
+
+要求：
+- 不超过 4000 个字符（含空格）
+- 学术英语，至少 80% 学术内容
+- 结构：开头（具体经历引入兴趣）→ 课内学术 → 课外延伸 → 实践 → 结尾（规划）
+- 重要：用户写的中文，你要提取核心信息，重新组织成地道的英文学术表达
+- 不要逐字翻译！要理解后重新写作
+- 保留书本名、课程名、奖项名等专有名词
+- 每段之间空一行，不要标记`;
+    } else {
+      sysPrompt = `你是一位资深的香港大学 Personal Statement 写作导师。请根据用户的中文信息撰写一篇英文香港大学个人陈述。
+
+要求：
+- 500-1000 词
+- 学术英语
+- 结构：动机 → 学术能力 → 实践 → 个人特质 → 未来规划
+- 重要：用户写的中文，你要提取核心信息，重新组织成地道的英文学术表达
+- 不要逐字翻译！
+- 每段之间空一行`;
+    }
+
+    return { system: sysPrompt, user: profile };
+  }
+
   async function generateWithAI() {
     const data = collectData();
     if (!data) return;
 
-    if (typeof cloudbase === 'undefined') {
-      showError('CloudBase SDK 加载失败，请刷新页面后重试。如果仍然失败，请使用模板生成。');
-      return;
-    }
-
     const apiKey = document.getElementById('apiKeyInput').value.trim();
     if (!apiKey) {
-      showError('请先输入你的 DeepSeek API Key');
+      showError('请先输入你的 DeepSeek API Key（点击上方"点我查看如何获取"查看教程）');
       document.getElementById('apiKeyInput').focus();
       return;
     }
     hideError();
     localStorage.setItem('ps_api_key', apiKey);
 
-    // Check at least some answers
     const answered = data.questions.filter(q => q.answer.length > 0).length;
     if (answered < 3) {
       showError('请至少回答 3 个问题再生成');
@@ -1992,46 +2047,47 @@ ${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generated
     const genBtn = document.getElementById('btnGenerate');
     btn.disabled = true;
     genBtn.disabled = true;
-    btn.innerHTML = '<div class="spinner" style="display:inline-block;width:16px;height:16px;border-width:2px;margin-right:6px;vertical-align:middle;"></div> AI 生成中...';
+    btn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:6px;vertical-align:middle;"></span> AI 生成中（约10秒）...';
 
     try {
-      // 通过 CloudBase SDK 调用云函数
-      const app = cloudbase.init({
-        env: 'ps-writer-d7gxnn1gne877154f'
+      const promptData = getAIPrompt(data.metadata.type, data.questions);
+
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: promptData.system },
+            { role: 'user', content: promptData.user }
+          ],
+          temperature: 0.7,
+          max_tokens: 4000
+        })
       });
 
-      // 匿名登录
-      await app.auth().anonymousAuthProvider().signIn();
-
-      const res = await app.callFunction({
-        name: 'generate-ps',
-        data: {
-          apiKey: apiKey,
-          type: data.metadata.type,
-          name: data.metadata.applicantName,
-          questions: data.questions
-        }
-      });
-
-      const result = res.result;
-
-      if (!result.success) {
-        showError(result.error || '生成失败，请重试');
-        return;
+      if (!response.ok) {
+        if (response.status === 401) throw new Error('API Key 无效，请检查后重试');
+        if (response.status === 429) throw new Error('API 调用次数超限，请稍后重试');
+        throw new Error(`API 错误 (${response.status})`);
       }
 
-      generatedPSText = result.ps;
-      generatedPSStats = result.stats || {};
-      showPSPreview(result.ps, data);
+      const result = await response.json();
+      const ps = result.choices[0].message.content.trim();
 
-      // 滚动到预览
+      generatedPSText = ps;
+      generatedPSStats = {};
+      showPSPreview(ps, data);
+
       setTimeout(() => {
         document.getElementById('psPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 300);
 
     } catch (e) {
-      console.error(e);
-      showError('调用失败: ' + (e.message || '未知错误'));
+      showError(e.message || '调用失败');
     } finally {
       btn.disabled = false;
       btn.innerHTML = '🤖 AI 生成';

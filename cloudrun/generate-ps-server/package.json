@@ -1,0 +1,14 @@
+{
+  "name": "generate-ps-server",
+  "version": "1.0.0",
+  "description": "CloudRun HTTP server for AI Personal Statement generation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.7.0",
+    "cors": "^2.8.5"
+  }
+}
