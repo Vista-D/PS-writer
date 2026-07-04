@@ -7,7 +7,7 @@
 <!-- 引入 FileSaver.js 用于文件下载 -->
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <!-- 引入 CloudBase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@1.8.0/dist/cloudbase.umd.js"></script>
+<script src="https://unpkg.com/@cloudbase/js-sdk@1.8.0/dist/cloudbase.umd.js"></script>
 <style>
   :root {
     --bg: #f5f7fa;
@@ -619,6 +619,18 @@
     border: 1px solid var(--border);
   }
   /* ====== AI API Section ====== */
+  .ai-steps summary {
+    user-select: none;
+    transition: color 0.2s;
+  }
+  .ai-steps summary:hover { opacity: 0.8; }
+  .ai-steps[open] summary { margin-bottom: 0; }
+  .ai-steps code {
+    background: var(--input-border);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
   .ai-section {
     background: var(--card-bg);
     border-radius: 16px;
@@ -1122,19 +1134,35 @@
     <h3>🤖 AI 增强生成</h3>
     <div class="sub">
       使用 AI（DeepSeek）将你的中文答案翻译润色成地道英文，效果远超模板生成。
-      需要输入你的 DeepSeek API Key（<a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">免费领取15元额度</a>，约可生成30篇）。
     </div>
+
+    <!-- 操作步骤指引 -->
+    <details class="ai-steps" id="aiSteps" style="margin-bottom:14px;">
+      <summary style="cursor:pointer;font-size:13px;color:var(--primary);font-weight:600;padding:6px 0;">📖 点我查看如何获取 API Key（共3步）</summary>
+      <div style="background:var(--section-bg);border-radius:10px;padding:14px 18px;margin-top:8px;font-size:13px;line-height:1.7;">
+        <p><strong>第 1 步：注册 DeepSeek 账号</strong></p>
+        <p>打开 <a href="https://platform.deepseek.com/sign_up" target="_blank" rel="noopener">platform.deepseek.com</a> → 手机号注册 → 新用户自动获赠 <strong>15 元体验金</strong></p>
+        <p style="margin-top:8px;"><strong>第 2 步：创建 API Key</strong></p>
+        <p>登录后点左侧「API Keys」→ 点「创建 API Key」→ 输入名称（如 <code>ps-writer</code>）→ 点「确认」</p>
+        <p style="margin-top:8px;"><strong>第 3 步：复制并粘贴</strong></p>
+        <p>复制生成的 <code>sk-xxxxxxxxxxxxxxxx</code> 格式的密钥 → 粘贴到下方输入框 → 点击「🤖 AI 生成」</p>
+        <p style="margin-top:10px;padding:8px 12px;background:var(--highlight);border-radius:8px;font-size:12px;">
+          💰 <strong>费用参考</strong>：15 元体验金约可生成 30 篇 Personal Statement，平均 <strong>0.5 元/篇</strong>
+        </p>
+      </div>
+    </details>
+
     <div class="ai-row">
-      <input type="text" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value="">
+      <input type="text" id="apiKeyInput" placeholder="在这里粘贴你的 sk-... DeepSeek API Key" value="">
       <button class="btn-ai" id="btnAiGenerate" onclick="generateWithAI()">🤖 AI 生成</button>
     </div>
     <div class="ai-row" style="margin-top:8px;">
-      <label style="font-size:12px;color:var(--text-light);">API Key 仅保存在你的浏览器本地，不会上传到其他服务器</label>
+      <label style="font-size:12px;color:var(--text-light);">🔒 API Key 仅保存在你浏览器本地，不会上传到其他服务器</label>
     </div>
     <div class="ai-error" id="aiError"></div>
     <div class="ai-method-toggle">
-      <button class="active" id="btnMethodTemplate" onclick="setMethod('template')">📝 模板生成（免费）</button>
-      <button id="btnMethodAI" onclick="setMethod('ai')">🤖 AI 生成（需 API Key）</button>
+      <button class="active" id="btnMethodTemplate" onclick="setMethod('template')">📝 模板生成（免费，无需 Key）</button>
+      <button id="btnMethodAI" onclick="setMethod('ai')">🤖 AI 生成（需 DeepSeek Key）</button>
     </div>
   </div>
 
@@ -1938,6 +1966,11 @@ ${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generated
   async function generateWithAI() {
     const data = collectData();
     if (!data) return;
+
+    if (typeof cloudbase === 'undefined') {
+      showError('CloudBase SDK 加载失败，请刷新页面后重试。如果仍然失败，请使用模板生成。');
+      return;
+    }
 
     const apiKey = document.getElementById('apiKeyInput').value.trim();
     if (!apiKey) {
