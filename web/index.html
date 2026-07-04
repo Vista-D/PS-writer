@@ -71,6 +71,27 @@
   .header h1 { font-size: 28px; margin-bottom: 8px; position: relative; }
   .header p { font-size: 14px; opacity: 0.9; position: relative; }
   .header .progress-text { font-size: 13px; opacity: 0.85; margin-top: 12px; }
+  .save-indicator {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    z-index: 99;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    box-shadow: 0 2px 10px var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-light);
+    transition: all 0.3s;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .save-indicator.show { opacity: 1; }
+  .save-indicator.done { color: #27ae60; border-color: #27ae60; }
 
   /* Theme toggle */
   .theme-toggle {
@@ -645,7 +666,7 @@
     <h3>⚙️ 个人信息</h3>
     <div class="save-row" style="margin-top:8px;">
       <label>申请人姓名</label>
-      <input type="text" id="applicantName" placeholder="请输入你的英文姓名 (如: Zhang San)">
+      <input type="text" id="applicantName" placeholder="请输入你的英文姓名 (如: Zhang San)" oninput="saveToLocal()">
     </div>
     <div class="save-row" style="margin-top:8px;">
       <label>保存格式</label>
@@ -1039,9 +1060,13 @@
     </p>
   </div>
 
+  <!-- Auto-save indicator -->
+  <div class="save-indicator" id="saveIndicator">💾 已自动保存</div>
+
   <!-- Bottom Actions -->
   <div class="actions">
     <button class="btn-secondary" onclick="clearAll()">🗑️ 清空所有</button>
+    <button class="btn-secondary" onclick="clearSavedData()">💾 清除保存</button>
     <button class="btn-secondary" onclick="scrollToTop()">⬆️ 回到顶部</button>
     <button class="btn-success" onclick="exportJSON()">📤 导出答案 (JSON)</button>
   </div>
@@ -1093,6 +1118,7 @@
     document.querySelectorAll('.type-option').forEach(el => {
       el.classList.toggle('active', el.dataset.type === type);
     });
+    saveToLocal();
   }
 
   function getSelectedType() {
@@ -1117,6 +1143,7 @@
       el.classList.toggle('over', count > 500);
     }
     updateProgress();
+    saveToLocal(); // 自动保存
   }
 
   // ============ Progress ============
@@ -1129,6 +1156,70 @@
     const pct = Math.round((answered / totalQuestions) * 100);
     document.getElementById('progressFill').style.width = pct + '%';
     document.getElementById('progressText').textContent = `已完成 ${answered} / ${totalQuestions} 题`;
+  }
+
+  // ============ Auto Save / Restore ============
+  const STORAGE_KEY = 'ps_writer_data';
+  let saveTimer = null;
+
+  function saveToLocal() {
+    const data = { type: selectedType, name: '', answers: {} };
+    data.name = document.getElementById('applicantName').value || '';
+    for (let i = 1; i <= totalQuestions; i++) {
+      const ta = document.querySelector(`.question[data-q="${i}"] textarea`);
+      if (ta) data.answers[i] = ta.value;
+    }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+    // Show save indicator
+    const el = document.getElementById('saveIndicator');
+    el.classList.add('show', 'done');
+    el.textContent = '💾 已自动保存';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      el.classList.remove('show');
+    }, 3000);
+  }
+
+  function loadFromLocal() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data.type) {
+        selectedType = data.type;
+        document.querySelectorAll('.type-option').forEach(el => {
+          el.classList.toggle('active', el.dataset.type === data.type);
+        });
+      }
+      if (data.name) {
+        document.getElementById('applicantName').value = data.name;
+      }
+      if (data.answers) {
+        for (const [qid, val] of Object.entries(data.answers)) {
+          const ta = document.querySelector(`.question[data-q="${qid}"] textarea`);
+          if (ta && val) {
+            ta.value = val;
+            countChars(ta, parseInt(qid));
+          }
+        }
+      }
+      updateProgress();
+      // Show restored indicator briefly
+      const el = document.getElementById('saveIndicator');
+      el.classList.add('show');
+      el.textContent = '📂 已恢复上次的进度';
+      setTimeout(() => { el.classList.remove('show'); }, 3000);
+    } catch(e) {}
+  }
+
+  function clearSavedData() {
+    if (!confirm('确定要清除已保存的进度吗？')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    clearAll();
+    const el = document.getElementById('saveIndicator');
+    el.classList.add('show');
+    el.textContent = '🗑️ 已清除保存数据';
+    setTimeout(() => { el.classList.remove('show'); }, 3000);
   }
 
   // ============ Collect Data ============
@@ -1735,6 +1826,7 @@ ${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generated
   }
 
   // ============ Init ============
+  loadFromLocal();
   updateProgress();
 </script>
 
