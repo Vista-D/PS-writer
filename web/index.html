@@ -6,7 +6,8 @@
 <title>PS文书助手 - 一键生成 Personal Statement</title>
 <!-- 引入 FileSaver.js 用于文件下载 -->
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-<!-- 不需要额外 SDK，直接使用 fetch 调用 DeepSeek API -->
+<!-- 引入 docx 库，用于生成真正的 .docx 文件（手机/iPad 兼容） -->
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.min.js"></script>
 <style>
   :root {
     --bg: #f5f7fa;
@@ -1794,56 +1795,106 @@
     }, 200);
   }
 
-  // ============ Download as Word (.docx via HTML) ============
+  // ============ Download as .docx (真实Word格式) ============
   function downloadDocx() {
     if (!generatedPSText) { alert('请先生成 PS 再下载！'); return; }
 
     const name = document.getElementById('applicantName').value.trim() || 'Applicant';
     const type = getSelectedType() || 'ucas';
-    const typeLabel = type === 'ucas' ? 'UCAS Personal Statement' : 'Personal Statement for Hong Kong University';
+    const fileName = `Personal_Statement_${type}_${name.replace(/\s+/g,'_')}.docx`;
 
-    // Create a Word-compatible HTML document
-    const htmlContent = `<!DOCTYPE html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office" 
-      xmlns:w="urn:schemas-microsoft-com:office:word" 
-      xmlns="http://www.w3.org/TR/REC-html40">
-<head>
-<meta charset="UTF-8">
-<title>${typeLabel}</title>
-<style>
-  body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; margin: 2.54cm; color: #333; }
-  h1 { text-align: center; font-size: 16pt; color: #1a1a2e; }
-  .info { text-align: center; font-size: 11pt; color: #555; margin-bottom: 20px; }
-  .divider { text-align: center; color: #aaa; font-size: 10pt; margin: 10px 0; }
-  p { text-indent: 0.75cm; margin: 0 0 8pt 0; line-height: 1.5; }
-  .stats { text-align: center; font-size: 9pt; color: #888; font-style: italic; margin-top: 20px; }
-</style>
-</head>
-<body>
-<h1>${typeLabel}</h1>
-<div class="info">Applicant: ${name}</div>
-<div class="divider">${'─'.repeat(50)}</div>
-${generatedPSText.split('\n').filter(p => p.trim()).map(p => `<p>${p.trim()}</p>`).join('\n')}
-<div class="divider">${'─'.repeat(50)}</div>
-${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generatedPSStats.charNoSpace} | Total characters: ${generatedPSStats.charTotal}</div>` : `<div class="stats">Word count: ${generatedPSStats.words || generatedPSText.split(/\\s+/).length}</div>`}
-</body>
-</html>`;
+    try {
+      // 使用 docx 库创建真实 .docx 文件
+      if (typeof docx === 'undefined') {
+        // 降级方案：如果库没加载，使用纯文本
+        const blob = new Blob([generatedPSText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
 
-    const blob = new Blob([htmlContent], { type: 'application/msword;charset=utf-8' });
-    const fileName = `Personal_Statement_${type}_${name.replace(/\s+/g,'_')}.doc`;
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak } = docx;
 
-    // Use FileSaver.js if available, otherwise fallback
-    if (typeof saveAs === 'function') {
-      saveAs(blob, fileName);
-    } else {
+      // 将文本按空行分段
+      const paras = generatedPSText.split('\n').filter(p => p.trim());
+      const docParas = [];
+
+      // 只添加内容段落，不加标题
+      for (const para of paras) {
+        const trimmed = para.trim();
+        if (!trimmed) continue;
+        docParas.push(
+          new Paragraph({
+            spacing: { after: 200, line: 360 },
+            indent: { firstLine: 720 },
+            children: [
+              new TextRun({
+                text: trimmed,
+                font: { name: 'Times New Roman' },
+                size: 24 // 12pt = 24 half-points
+              })
+            ]
+          })
+        );
+      }
+
+      // 创建文档
+      const doc = new Document({
+        styles: {
+          default: {
+            document: {
+              run: {
+                font: 'Times New Roman',
+                size: 24
+              }
+            }
+          }
+        },
+        sections: [{
+          properties: {
+            page: {
+              margin: {
+                top: 1440,   // 1 inch = 1440 twips
+                right: 1440,
+                bottom: 1440,
+                left: 1440
+              }
+            }
+          },
+          children: docParas
+        }]
+      });
+
+      // 生成并下载
+      Packer.toBlob(doc).then(blob => {
+        if (typeof saveAs === 'function') {
+          saveAs(blob, fileName);
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      });
+
+    } catch (e) {
+      // 出错时使用纯文本降级
+      const blob = new Blob([generatedPSText], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
+      a.download = fileName.replace('.docx', '.txt');
       a.click();
-      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      alert('生成 Word 遇到问题，已保存为纯文本格式');
     }
   }
 
@@ -1962,7 +2013,7 @@ ${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generated
     document.getElementById('aiError').classList.remove('show');
   }
 
-  // ========== AI 提示词 ==========
+  // ========== AI 提示词（严格版）==========
   function getAIPrompt(type, questions) {
     const qMap = {};
     questions.forEach(q => { qMap[q.id] = q.answer || ''; });
@@ -1999,26 +2050,55 @@ ${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generated
 
     let sysPrompt;
     if (type === 'ucas') {
-      sysPrompt = `你是一位资深的 UCAS Personal Statement 写作导师。请根据用户的中文信息撰写一篇英文 UCAS Personal Statement。
+      sysPrompt = `你是 UCAS Personal Statement 写作专家。请严格按以下要求撰写：
 
-要求：
-- 不超过 4000 个字符（含空格）
-- 学术英语，至少 80% 学术内容
-- 结构：开头（具体经历引入兴趣）→ 课内学术 → 课外延伸 → 实践 → 结尾（规划）
-- 重要：用户写的中文，你要提取核心信息，重新组织成地道的英文学术表达
-- 不要逐字翻译！要理解后重新写作
+## 格式要求（必须遵守）
+- 全文必须是纯英文文本，不要添加标题、编号或"段落一"等标记
+- 每段之间空一行，段落本身不要缩进
+- 不要使用任何 Markdown 标记（不要 #、*、- 等）
+- 不要写 "Personal Statement" 标题
+
+## 字符限制（必须遵守）
+- 总字符数（含空格）不得超过 4000
+- 写完后请自行检查字数
+
+## 结构要求（必须遵守，5段）
+第1段（开头钩子）：用用户描述的具体经历引出对专业的兴趣，不要用"I have always been"开头
+第2段（课内学术）：展示在相关课程中学到的深度思考和学术好奇心
+第3段（课外延伸）：课外阅读、竞赛、项目等拓展经历
+第4段（实践经历）：实习、社团、志愿等实践
+第5段（结尾）：未来规划 + 对大学学习的期待
+
+## 写作要求
+- 用户写的中文，你要提取核心信息重新组织成地道英文，不要逐字翻译
 - 保留书本名、课程名、奖项名等专有名词
-- 每段之间空一行，不要标记`;
+- 用具体事例代替空泛描述（Show, don't tell）
+- 至少 80% 内容聚焦学术
+- 全文语气：自信、学术、个性化`;
     } else {
-      sysPrompt = `你是一位资深的香港大学 Personal Statement 写作导师。请根据用户的中文信息撰写一篇英文香港大学个人陈述。
+      sysPrompt = `你是香港大学 Personal Statement 写作专家。请严格按以下要求撰写：
 
-要求：
+## 格式要求（必须遵守）
+- 全文纯英文，不要添加标题、编号等标记
+- 每段之间空一行
+- 不要使用 Markdown 标记
+
+## 字数限制（必须遵守）
 - 500-1000 词
-- 学术英语
-- 结构：动机 → 学术能力 → 实践 → 个人特质 → 未来规划
-- 重要：用户写的中文，你要提取核心信息，重新组织成地道的英文学术表达
-- 不要逐字翻译！
-- 每段之间空一行`;
+- 写完后请自行检查
+
+## 结构要求（必须遵守，5段）
+第1段：动机 — 为什么选这个专业 + 为什么选香港
+第2段：学术能力 — 课程成绩、项目、研究
+第3段：实践经历 — 实习、竞赛、社会活动
+第4段：个人特质 — 领导力、跨文化适应力
+第5段：结尾 — 职业规划 + 总结
+
+## 写作要求
+- 用户写的中文，提取核心信息重新组织成地道英文
+- 保留专有名词
+- 体现综合素质和国际视野
+- 强调与香港的匹配度`;
     }
 
     return { system: sysPrompt, user: profile };
@@ -2077,6 +2157,24 @@ ${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generated
 
       const result = await response.json();
       const ps = result.choices[0].message.content.trim();
+
+      // 校验：检查段落数和字数
+      const paragraphs = ps.split('\n').filter(p => p.trim().length > 20);
+      if (paragraphs.length < 3) {
+        showError('AI 生成的文书段落数不够（<3段），建议重新生成');
+        btn.disabled = false;
+        btn.innerHTML = '🤖 AI 生成';
+        genBtn.disabled = false;
+        return;
+      }
+      const charTotal = ps.length;
+      if (data.metadata.type === 'ucas' && charTotal > 4200) {
+        showError(`⚠️ AI 生成的文书 ${charTotal} 字符，超过 UCAS 4000 限制，请重新生成并告诉 AI 缩短内容`);
+        btn.disabled = false;
+        btn.innerHTML = '🤖 AI 生成';
+        genBtn.disabled = false;
+        return;
+      }
 
       generatedPSText = ps;
       generatedPSStats = {};
