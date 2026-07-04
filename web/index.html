@@ -6,6 +6,8 @@
 <title>PS文书助手 - 一键生成 Personal Statement</title>
 <!-- 引入 FileSaver.js 用于文件下载 -->
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<!-- 引入 CloudBase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@cloudbase/js-sdk@1.8.0/dist/cloudbase.umd.js"></script>
 <style>
   :root {
     --bg: #f5f7fa;
@@ -616,11 +618,90 @@
     color: var(--text);
     border: 1px solid var(--border);
   }
+  /* ====== AI API Section ====== */
+  .ai-section {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px 30px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .ai-section h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ai-section .sub {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-bottom: 14px;
+  }
+  .ai-section .ai-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .ai-section input {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text);
+  }
+  .ai-section input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.15); }
+  .btn-ai {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-ai:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+  .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .ai-error { color: #e74c3c; font-size: 13px; margin-top: 8px; display: none; }
+  .ai-error.show { display: block; }
+  .ai-method-toggle {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .ai-method-toggle button {
+    flex: 1;
+    padding: 8px 16px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--section-bg);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .ai-method-toggle button.active {
+    border-color: var(--primary);
+    background: var(--highlight);
+    font-weight: 600;
+  }
+
   @media (max-width: 640px) {
     .ps-actions { flex-direction: column; }
     .ps-actions button { width: 100%; }
     .ps-preview { padding: 16px; }
     .ps-preview .ps-content { font-size: 13px; max-height: 300px; padding: 14px; }
+    .ai-section .ai-row { flex-direction: column; }
+    .ai-section input { min-width: 0; width: 100%; }
+    .btn-ai { width: 100%; }
   }
 </style>
 </head>
@@ -1036,11 +1117,32 @@
     </div>
   </div> <!-- /questionnaire -->
 
-  <!-- ★ NEW: 一键生成 PS -->
+  <!-- ★ AI 设置 -->
+  <div class="ai-section" id="aiSection">
+    <h3>🤖 AI 增强生成</h3>
+    <div class="sub">
+      使用 AI（DeepSeek）将你的中文答案翻译润色成地道英文，效果远超模板生成。
+      需要输入你的 DeepSeek API Key（<a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">免费领取15元额度</a>，约可生成30篇）。
+    </div>
+    <div class="ai-row">
+      <input type="text" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value="">
+      <button class="btn-ai" id="btnAiGenerate" onclick="generateWithAI()">🤖 AI 生成</button>
+    </div>
+    <div class="ai-row" style="margin-top:8px;">
+      <label style="font-size:12px;color:var(--text-light);">API Key 仅保存在你的浏览器本地，不会上传到其他服务器</label>
+    </div>
+    <div class="ai-error" id="aiError"></div>
+    <div class="ai-method-toggle">
+      <button class="active" id="btnMethodTemplate" onclick="setMethod('template')">📝 模板生成（免费）</button>
+      <button id="btnMethodAI" onclick="setMethod('ai')">🤖 AI 生成（需 API Key）</button>
+    </div>
+  </div>
+
+  <!-- ★ 生成按钮 -->
   <div class="generate-section" id="generateSection">
     <h2>🚀 一键生成 Personal Statement</h2>
-    <p>填写完以上问卷后，点击下方按钮，AI 模板引擎自动为你生成英文 PS 草稿</p>
-    <button class="btn-generate" id="btnGenerate" onclick="generatePS()">
+    <p id="genMethodLabel">当前模式：📝 模板引擎（免费，中译英+润色）</p>
+    <button class="btn-generate" id="btnGenerate" onclick="handleGenerate()">
       ✨ 生成我的 Personal Statement
     </button>
   </div>
@@ -1803,6 +1905,115 @@ ${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generated
     });
   }
 
+  // ============ AI Generation ============
+  let genMethod = 'template'; // 'template' | 'ai'
+
+  function setMethod(m) {
+    genMethod = m;
+    document.getElementById('btnMethodTemplate').classList.toggle('active', m === 'template');
+    document.getElementById('btnMethodAI').classList.toggle('active', m === 'ai');
+    document.getElementById('genMethodLabel').textContent =
+      m === 'ai' ? '当前模式：🤖 AI 生成（DeepSeek API）' : '当前模式：📝 模板引擎（免费，中译英+润色）';
+    localStorage.setItem('ps_gen_method', m);
+  }
+
+  function handleGenerate() {
+    if (genMethod === 'ai') {
+      generateWithAI();
+    } else {
+      generatePS();
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('aiError');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function hideError() {
+    document.getElementById('aiError').classList.remove('show');
+  }
+
+  async function generateWithAI() {
+    const data = collectData();
+    if (!data) return;
+
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    if (!apiKey) {
+      showError('请先输入你的 DeepSeek API Key');
+      document.getElementById('apiKeyInput').focus();
+      return;
+    }
+    hideError();
+    localStorage.setItem('ps_api_key', apiKey);
+
+    // Check at least some answers
+    const answered = data.questions.filter(q => q.answer.length > 0).length;
+    if (answered < 3) {
+      showError('请至少回答 3 个问题再生成');
+      return;
+    }
+
+    const btn = document.getElementById('btnAiGenerate');
+    const genBtn = document.getElementById('btnGenerate');
+    btn.disabled = true;
+    genBtn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="display:inline-block;width:16px;height:16px;border-width:2px;margin-right:6px;vertical-align:middle;"></div> AI 生成中...';
+
+    try {
+      // 通过 CloudBase SDK 调用云函数
+      const app = cloudbase.init({
+        env: 'ps-writer-d7gxnn1gne877154f'
+      });
+
+      // 匿名登录
+      await app.auth().anonymousAuthProvider().signIn();
+
+      const res = await app.callFunction({
+        name: 'generate-ps',
+        data: {
+          apiKey: apiKey,
+          type: data.metadata.type,
+          name: data.metadata.applicantName,
+          questions: data.questions
+        }
+      });
+
+      const result = res.result;
+
+      if (!result.success) {
+        showError(result.error || '生成失败，请重试');
+        return;
+      }
+
+      generatedPSText = result.ps;
+      generatedPSStats = result.stats || {};
+      showPSPreview(result.ps, data);
+
+      // 滚动到预览
+      setTimeout(() => {
+        document.getElementById('psPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+
+    } catch (e) {
+      console.error(e);
+      showError('调用失败: ' + (e.message || '未知错误'));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🤖 AI 生成';
+      genBtn.disabled = false;
+    }
+  }
+
+  // Save/load API key
+  function loadApiKey() {
+    const saved = localStorage.getItem('ps_api_key');
+    if (saved) document.getElementById('apiKeyInput').value = saved;
+    const method = localStorage.getItem('ps_gen_method');
+    if (method) setMethod(method);
+  }
+
   // ============ Utility ============
   function clearAll() {
     if (!confirm('确定要清空所有内容吗？')) return;
@@ -1827,6 +2038,7 @@ ${type === 'ucas' ? `<div class="stats">Character count (no spaces): ${generated
 
   // ============ Init ============
   loadFromLocal();
+  loadApiKey();
   updateProgress();
 </script>
 
