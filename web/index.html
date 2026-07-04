@@ -1162,147 +1162,333 @@
     }, 500);
   }
 
-  // ---------- UCAS Generator ----------
+  // ================================================================
+  // ★★ 升级版引擎：中译英 + 润色 + 学术句式变体 ★★
+  // ================================================================
+
+  // ---------- 中英文词典 ----------
+  const CN_EN_DICT = {
+    '激发': 'sparked', '培养': 'cultivated', '深入': 'in-depth', '探索': 'exploration',
+    '兴趣': 'interest', '热情': 'enthusiasm', '启发': 'inspired', '影响': 'influenced',
+    '参与': 'participated in', '负责': 'took responsibility for', '组织': 'organised',
+    '完成': 'accomplished', '获得': 'achieved', '提升': 'enhanced', '拓展': 'broadened',
+    '丰富': 'enriched', '锻炼': 'strengthened', '挑战': 'challenge',
+    '收获': 'gained valuable insights', '深刻': 'profound', '理解': 'understanding',
+    '思考': 'critical thinking', '分析': 'analysis', '解决': 'solved',
+    '团队': 'teamwork', '合作': 'collaboration', '领导': 'leadership',
+    '创新': 'innovation', '创造': 'creativity', '设计': 'designed',
+    '开发': 'developed', '研究': 'research', '实验': 'experimentation',
+    '项目': 'project', '竞赛': 'competition', '实习': 'internship',
+    '志愿': 'volunteered', '社团': 'extracurricular club', '学生会': 'student council',
+    '沟通': 'communication', '表达': 'articulation', '写作': 'academic writing',
+    '阅读': 'extensive reading', '自学': 'self-directed learning',
+    '坚持': 'perseverance', '努力': 'dedication', '突破': 'breakthrough',
+    '影响': 'impact', '反思': 'critical reflection', '视野': 'intellectual horizon',
+    '自信': 'confidence', '成长': 'personal growth', '意识到': 'came to realise',
+  };
+
+  // ---------- 学术句式模板库 ----------
+  const ACADEMIC_PHRASES = {
+    motivation: [
+      'fuelled my determination to', 'deepened my commitment to',
+      'solidified my resolve to', 'reinforced my aspiration to',
+      'strengthened my desire to'
+    ],
+    learning: [
+      'enabled me to appreciate', 'provided me with a framework for understanding',
+      'offered me valuable insights into', 'deepened my comprehension of',
+      'sharpened my ability to analyse'
+    ],
+    discovery: [
+      'led me to discover', 'introduced me to the intriguing world of',
+      'opened my eyes to the complexities of', 'revealed the fascinating nature of',
+      'ignited my curiosity about'
+    ],
+    growth: [
+      'This experience taught me', 'Through this process, I developed',
+      'This challenge cultivated my', 'This opportunity enhanced my',
+      'Engaging with this allowed me to build'
+    ],
+    connection: [
+      'Furthermore', 'Moreover', 'In addition', 'Additionally',
+      'Beyond this', 'Complementing this'
+    ],
+    transition: [
+      'Consequently', 'As a result', 'This led me to',
+      'Building on this', 'Driven by this curiosity'
+    ],
+    reflection: [
+      'This made me realise that', 'I came to understand that',
+      'This experience underscored the importance of',
+      'It became evident to me that', 'I recognised that'
+    ]
+  };
+
+  // ---------- 内容提取函数：从中文里提取关键名词 ----------
+  function extractNouns(text) {
+    if (!text) return { nouns: [], numbers: [], rest: text };
+    // 提取数字/分数/奖项名
+    const numbers = text.match(/[\d.]+%?|[A-E]\*?\+?|前\d+%/g) || [];
+    // 提取英文/拼音专有名词
+    const nouns = text.match(/[A-Z][a-zA-Z]+(?:\s[A-Z][a-zA-Z]+)*/g) || [];
+    return { nouns, numbers, rest: text };
+  }
+
+  // ---------- 中译英处理器 ----------
+  function translateToEnglish(text, maxLen) {
+    if (!text) return '';
+    let result = text;
+    // 先用词典替换
+    for (const [cn, en] of Object.entries(CN_EN_DICT)) {
+      result = result.replace(new RegExp(cn, 'g'), en);
+    }
+    // 截断
+    if (maxLen && result.length > maxLen) result = result.substring(0, maxLen) + '...';
+    return result;
+  }
+
+  // ---------- 随机取句式 ----------
+  function randPhrase(category) {
+    const arr = ACADEMIC_PHRASES[category] || [];
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  // ---------- 中文→英文段落生成器（核心） ----------
+  function cnToEnSentence(cnText, context, maxChars) {
+    if (!cnText) return '';
+    
+    // 提取关键信息
+    const { nouns, numbers } = extractNouns(cnText);
+    
+    // 清理中文，保留关键内容
+    let cleaned = cnText
+      .replace(/[。，！？；：、""（）【】《》]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    // 简单中译英（保留专有名词）
+    const translated = translateToEnglish(cleaned, maxChars || 200);
+    
+    // 根据上下文类型生成不同句式
+    const templates = {
+      hook: [
+        `It was "${nouns[0] || 'a defining experience'}" that ${randPhrase('motivation')} pursue ${context || 'this field'}.`,
+        `My encounter with ${nouns[0] || 'a pivotal experience'} ${randPhrase('discovery')} of ${context || 'my academic interest'}.`,
+      ],
+      academic: [
+        `${randPhrase('learning')} ${context}. ${translated}`,
+        `Through ${context}, ${randPhrase('growth')} ${translated}`,
+      ],
+      practice: [
+        `${randPhrase('growth')} ${translated}`,
+        `${randPhrase('connection')}, ${translated}`,
+      ],
+      reflection: [
+        `${randPhrase('reflection')} ${translated}`,
+        `${randPhrase('transition')}, ${translated}`,
+      ]
+    };
+
+    const pool = templates[context] || [translated];
+    let sentence = pool[Math.floor(Math.random() * pool.length)];
+    
+    // 如果翻译结果里有数字/成绩，确保保留
+    if (numbers.length > 0 && !sentence.includes(numbers[0])) {
+      sentence += ` (${numbers.join(', ')})`;
+    }
+    
+    return sentence;
+  }
+
+  // ---------- UCAS Generator (升级版) ----------
   function generateUCASPS(data) {
     const n = data.metadata.applicantName || '';
-    const a1 = getAns(data,1), a2 = getAns(data,2), a3 = getAns(data,3), a4 = getAns(data,4);
-    const a5 = getAns(data,5), a6 = getAns(data,6), a7 = getAns(data,7), a8 = getAns(data,8);
-    const a9 = getAns(data,9), a10 = getAns(data,10), a11 = getAns(data,11);
-    const a12 = getAns(data,12), a13 = getAns(data,13), a14 = getAns(data,14);
-    const a15 = getAns(data,15), a16 = getAns(data,16), a17 = getAns(data,17);
-    const a18 = getAns(data,18), a19 = getAns(data,19), a20 = getAns(data,20);
-    const a21 = getAns(data,21), a22 = getAns(data,22), a23 = getAns(data,23);
-    const a24 = getAns(data,24), a25 = getAns(data,25), a26 = getAns(data,26);
-    const a27 = getAns(data,27), a28 = getAns(data,28), a29 = getAns(data,29), a30 = getAns(data,30);
+    const a1 = getAns(data,1), a5 = getAns(data,5), a6 = getAns(data,6);
+    const a7 = getAns(data,7), a8 = getAns(data,8), a9 = getAns(data,9);
+    const a10 = getAns(data,10), a11 = getAns(data,11), a12 = getAns(data,12);
+    const a13 = getAns(data,13), a14 = getAns(data,14), a15 = getAns(data,15);
+    const a16 = getAns(data,16), a17 = getAns(data,17), a18 = getAns(data,18);
+    const a19 = getAns(data,19), a20 = getAns(data,20), a23 = getAns(data,23);
+    const a25 = getAns(data,25), a28 = getAns(data,28), a29 = getAns(data,29);
+    const a30 = getAns(data,30);
 
     const major = a1 || 'your chosen subject';
-    const trigger = a6 || a5 || 'a specific moment';
-    const school = a2 || 'my school';
-    const courseInfo = a9 || 'relevant courses';
-    const insight = a10 || '';
-    const skill = a13 || '';
-    const interest = a7 || '';
-    const books = a8 || '';
-    const project = a11 || '';
-    const competition = a12 || '';
-    const internship = a14 || '';
-    const research = a15 || '';
-    const club = a16 || '';
-    const volunteer = a17 || '';
-    const leadership = a19 || '';
-    const career = a25 || '';
-    const whyStudy = a23 || '';
-    const hobby = a29 || '';
-    const background = a28 || '';
+    const school = getAns(data,2) || 'my school';
+    const triggerText = a6 || a5;
+    const interestArea = a7;
+    const books = a8;
+    const courses = a9;
+    const insight = a10;
+    const project = a11;
+    const competition = a12;
+    const skills = a13;
+    const internship = a14;
+    const research = a15;
+    const club = a16;
+    const volunteer = a17;
+    const leadership = a19;
+    const career = a25;
+    const hobby = a29;
+    const extra = a30;
 
-    // Build paragraphs
     let ps = '';
+    let pCount = 0;
 
-    // Para 1: Hook
-    ps += `My fascination with ${major} began with ${trigger}. `;
-    ps += `This moment transformed my casual curiosity into a genuine determination to explore this field at a deeper level, and has shaped my academic journey ever since.\n\n`;
+    // === Paragraph 1: Hook ===
+    if (triggerText) {
+      ps += cnToEnSentence(triggerText, 'hook', 250) + ' ';
+      ps += `This formative experience ignited a genuine passion for ${interestArea || major}, transforming an initial curiosity into a focused academic pursuit that has shaped my entire educational journey.`;
+    } else {
+      ps += `My decision to study ${major} at university stems from a deep intellectual curiosity about how this field shapes the world around us. I have long been fascinated by the ways in which ${major} continues to push the boundaries of human knowledge.`;
+    }
+    ps += '\n\n';
+    pCount++;
 
-    // Para 2: Academic
-    ps += `Studying at ${school}, I have undertaken ${courseInfo}. `;
-    if (insight) ps += `${insight} `;
-    if (skill) ps += `Through these studies, I have developed skills including ${skill}. `;
-    ps += `This strong academic foundation has prepared me to engage with university-level study in ${major}.\n\n`;
+    // === Paragraph 2: Academic Foundation ===
+    if (courses) {
+      ps += `My academic journey at ${school} has provided a rigorous foundation. `;
+      // 英文化课程信息
+      const courseEn = translateToEnglish(courses, 100);
+      ps += `I have undertaken ${courseEn}, which `;
+      if (insight) {
+        ps += cnToEnSentence(insight, 'academic', 200);
+      } else {
+        ps += `has deepened my understanding of the theoretical underpinnings of ${interestArea || major}.`;
+      }
+      ps += ' ';
+    }
+    if (!courses && insight) {
+      ps += cnToEnSentence(insight, 'academic', 300) + ' ';
+    }
+    if (skills) {
+      const skillEn = translateToEnglish(skills, 80);
+      ps += `${randPhrase('connection')}, this has equipped me with essential competencies: ${skillEn}. `;
+    }
+    if (project || competition) {
+      if (project) ps += translateToEnglish(project, 150) + '. ';
+      if (competition) ps += translateToEnglish(competition, 100) + '. ';
+      ps += `These activities have sharpened my analytical thinking and problem-solving abilities.`;
+    }
+    ps += '\n\n';
+    pCount++;
 
-    // Para 3: Extension
-    if (interest) ps += `I am particularly drawn to ${interest}. `;
-    if (books) ps += `To deepen my understanding, I read ${books}. `;
-    if (project) ps += `I undertook projects such as ${project}, which gave me hands-on experience. `;
-    if (competition) ps += `I also participated in ${competition}, which sharpened my analytical and problem-solving abilities. `;
-    ps += `These experiences have significantly extended my knowledge beyond the classroom.\n\n`;
+    // === Paragraph 3: Intellectual Extension ===
+    if (interestArea || books || project) {
+      if (interestArea) {
+        ps += `Within ${major}, I am particularly drawn to ${translateToEnglish(interestArea, 80)}. `;
+      }
+      if (books) {
+        ps += `To extend my knowledge, I engaged with ${translateToEnglish(books, 200)}. `;
+      }
+      if (project) {
+        ps += `${randPhrase('connection')}, I undertook ${translateToEnglish(project, 200)}. `;
+      }
+      ps += `These independent pursuits have allowed me to develop a deeper, more nuanced understanding of the field beyond the confines of the taught curriculum.`;
+      ps += '\n\n';
+      pCount++;
+    }
 
-    // Para 4: Practice
-    if (internship) ps += `My internship experience at ${internship} provided valuable insight into how the field operates in practice. `;
-    if (research) ps += `I also engaged in research on ${research}. `;
-    if (club) ps += `At school, I have been actively involved in ${club}. `;
-    if (volunteer) ps += `Volunteering through ${volunteer} taught me the importance of communication and empathy. `;
-    if (leadership) ps += `${leadership} `;
-    ps += `These experiences have developed my ability to work effectively in teams and communicate complex ideas clearly.\n\n`;
+    // === Paragraph 4: Practice & Impact ===
+    let practiceParts = [];
+    if (internship) practiceParts.push(translateToEnglish(internship, 150));
+    if (research) practiceParts.push(translateToEnglish(research, 150));
+    if (club) practiceParts.push(translateToEnglish(club, 100));
+    if (volunteer) practiceParts.push(translateToEnglish(volunteer, 150));
+    if (leadership) practiceParts.push(translateToEnglish(leadership, 150));
 
-    // Para 5: Conclusion
-    ps += `Looking ahead, my ambition is to ${career || 'pursue a career in ' + major}. `;
-    if (whyStudy) ps += `${whyStudy} `;
-    ps += `I am excited by the prospect of studying ${major} at university — not only to acquire technical expertise, but to understand how I can contribute to this ever-evolving field. `;
-    if (hobby) ps += `Outside of academics, ${hobby} has taught me discipline and perseverance. `;
-    ps += `I am ready to embrace the challenges of higher education and make the most of every opportunity to learn and grow.`;
+    if (practiceParts.length > 0) {
+      const opening = randPhrase('transition');
+      ps += `${opening.charAt(0).toUpperCase() + opening.slice(1)}, practical experiences have been equally formative. `;
+      ps += practiceParts.join(' ') + ' ';
+      ps += `These experiences have not only developed my capacity for effective collaboration and communication, but have also instilled in me a strong sense of social responsibility and a commitment to applying my skills for the benefit of others.`;
+      ps += '\n\n';
+      pCount++;
+    }
+
+    // === Paragraph 5: Conclusion & Future ===
+    if (career) {
+      ps += `Looking ahead, I aspire to ${translateToEnglish(career, 100)}. `;
+    }
+    ps += `I am eager to immerse myself in the intellectual community at university, where I can engage with leading scholars and like-minded peers. `;
+    if (hobby) {
+      ps += `${randPhrase('growth')} ${translateToEnglish(hobby, 100)}. `;
+    }
+    if (extra) ps += translateToEnglish(extra, 150) + ' ';
+    ps += `I am fully committed to embracing the challenges of higher education and contributing meaningfully to the academic community.`;
 
     return ps;
   }
 
-  // ---------- Hong Kong Generator ----------
+  // ---------- Hong Kong Generator (升级版) ----------
   function generateHKPS(data) {
     const n = data.metadata.applicantName || '';
-    const a1 = getAns(data,1), a2 = getAns(data,2), a3 = getAns(data,3), a4 = getAns(data,4);
-    const a5 = getAns(data,5), a6 = getAns(data,6), a7 = getAns(data,7), a8 = getAns(data,8);
-    const a9 = getAns(data,9), a10 = getAns(data,10), a11 = getAns(data,11);
-    const a12 = getAns(data,12), a13 = getAns(data,13), a14 = getAns(data,14);
-    const a15 = getAns(data,15), a16 = getAns(data,16), a17 = getAns(data,17);
-    const a18 = getAns(data,18), a19 = getAns(data,19), a20 = getAns(data,20);
-    const a21 = getAns(data,21), a22 = getAns(data,22), a23 = getAns(data,23);
-    const a24 = getAns(data,24), a25 = getAns(data,25), a26 = getAns(data,26);
-    const a27 = getAns(data,27), a28 = getAns(data,28), a29 = getAns(data,29), a30 = getAns(data,30);
+    const a1 = getAns(data,1), a5 = getAns(data,5), a6 = getAns(data,6);
+    const a7 = getAns(data,7), a8 = getAns(data,8), a9 = getAns(data,9);
+    const a10 = getAns(data,10), a11 = getAns(data,11), a12 = getAns(data,12);
+    const a13 = getAns(data,13), a14 = getAns(data,14), a15 = getAns(data,15);
+    const a16 = getAns(data,16), a17 = getAns(data,17), a18 = getAns(data,18);
+    const a19 = getAns(data,19), a23 = getAns(data,23), a24 = getAns(data,24);
+    const a25 = getAns(data,25), a26 = getAns(data,26), a28 = getAns(data,28);
+    const a29 = getAns(data,29);
 
     const major = a1 || 'your chosen subject';
-    const uniInfo = a24 || 'your target university';
-    const trigger = a6 || a5 || 'a specific moment';
-    const school = a2 || 'my school';
-    const courseInfo = a9 || 'relevant courses';
-    const insight = a10 || '';
-    const skill = a13 || '';
-    const interest = a7 || '';
-    const project = a11 || '';
-    const competition = a12 || '';
-    const internship = a14 || '';
-    const research = a15 || '';
-    const club = a16 || '';
-    const volunteer = a17 || '';
-    const crossCulture = a18 || '';
-    const leadership = a19 || '';
-    const career = a25 || '';
-    const whyHK = a23 || '';
-    const contribution = a26 || '';
-    const hobby = a29 || '';
-    const background = a28 || '';
+    const school = getAns(data,2) || 'my school';
+    const triggerText = a6 || a5;
+    const whyHK = a23;
+    const uniInfo = a24;
+    const career = a25;
+    const contribution = a26;
+    const background = a28;
+    const hobby = a29;
 
     let ps = '';
 
-    // Para 1: Motivation
-    ps += `My decision to pursue ${major} at a Hong Kong university stems from ${trigger}. `;
-    if (whyHK) ps += `${whyHK} `;
-    if (uniInfo) ps += `${uniInfo} `;
-    ps += `I believe Hong Kong\'s unique position as an international hub, where Eastern and Western academic traditions converge, provides the ideal environment for my intellectual development.\n\n`;
+    // === Para 1: Motivation + Why Hong Kong ===
+    if (triggerText) {
+      ps += cnToEnSentence(triggerText, 'hook', 200) + ' ';
+    }
+    ps += `I believe Hong Kong — a dynamic crossroads where Eastern and Western intellectual traditions converge — offers the ideal environment to pursue ${major}. `;
+    if (whyHK) ps += translateToEnglish(whyHK, 150) + ' ';
+    if (uniInfo) ps += translateToEnglish(uniInfo, 150) + ' ';
+    ps += '\n\n';
 
-    // Para 2: Academic
-    ps += `At ${school}, I have studied ${courseInfo}. `;
-    if (insight) ps += `${insight} `;
-    if (skill) ps += `My academic training has equipped me with ${skill}. `;
-    if (project) ps += `I have also completed projects including ${project}. `;
-    if (competition) ps += `Participating in ${competition} has strengthened my academic confidence.`;
-    ps += `\n\n`;
+    // === Para 2: Academic ===
+    ps += `My academic preparation at ${school} has been both rigorous and enriching. `;
+    const courses = a9;
+    if (courses) ps += `I have studied ${translateToEnglish(courses, 100)}, `;
+    if (a10) ps += cnToEnSentence(a10, 'academic', 200) + ' ';
+    if (a11) ps += translateToEnglish(a11, 150) + ' ';
+    if (a12) ps += translateToEnglish(a12, 100) + '. ';
+    if (a13) ps += `I have developed strong competencies in ${translateToEnglish(a13, 80)}. `;
+    ps += `This solid academic grounding has prepared me well for the demands of university-level study.`;
+    ps += '\n\n';
 
-    // Para 3: Practice
-    if (internship) ps += `Beyond the classroom, I gained practical experience through ${internship}. `;
-    if (research) ps += `I contributed to research on ${research}. `;
-    if (club) ps += `School activities such as ${club} have developed my organisational skills. `;
-    if (volunteer) ps += `My volunteer work with ${volunteer} fostered a sense of social responsibility. `;
-    if (leadership) ps += `${leadership} `;
-    ps += `\n\n`;
+    // === Para 3: Practice & Values ===
+    let expParts = [];
+    if (a14) expParts.push(translateToEnglish(a14, 150));
+    if (a15) expParts.push(translateToEnglish(a15, 150));
+    if (a16) expParts.push(translateToEnglish(a16, 100));
+    if (a17) expParts.push(translateToEnglish(a17, 150));
+    if (a18) expParts.push(a18.length > 50 ? translateToEnglish(a18, 100) : a18);
+    if (a19) expParts.push(translateToEnglish(a19, 150));
+    if (expParts.length > 0) {
+      ps += `${randPhrase('connection').charAt(0).toUpperCase() + randPhrase('connection').slice(1)}, my experiences beyond the classroom have been equally valuable. `;
+      ps += expParts.join(' ') + ' ';
+      ps += `These opportunities have cultivated my leadership abilities, cross-cultural awareness, and a deep commitment to contributing positively to society.`;
+      ps += '\n\n';
+    }
 
-    // Para 4: Personal Qualities
-    ps += `My personal background has shaped who I am today. `;
-    if (background) ps += `${background} `;
-    if (crossCulture) ps += `${crossCulture} `;
-    if (contribution) ps += `I believe I can contribute to the university community through ${contribution}. `;
-    if (hobby) ps += `${hobby} `;
-    ps += `\n\n`;
+    // === Para 4: Personal Qualities ===
+    if (background || contribution || hobby) {
+      if (background) ps += translateToEnglish(background, 200) + ' ';
+      if (contribution) ps += `I believe I can bring a unique perspective to the university community: ${translateToEnglish(contribution, 200)}. `;
+      if (hobby) ps += translateToEnglish(hobby, 100) + ' ';
+      ps += '\n\n';
+    }
 
-    // Para 5: Future
-    ps += `My long-term goal is to ${career || 'build a career in ' + major}. `;
-    ps += `I am confident that studying in Hong Kong will not only provide me with a rigorous academic education but also broaden my global perspective. I look forward to growing as both a scholar and a global citizen, and to bringing my unique perspective to the university community.`;
+    // === Para 5: Future ===
+    ps += `My long-term aspiration is to ${career ? translateToEnglish(career, 100) : 'build a meaningful career in ' + major}. `;
+    ps += `I am confident that studying in Hong Kong will not only equip me with world-class academic training but also broaden my global perspective. I look forward to growing as both a scholar and a responsible global citizen, and to making a lasting contribution to the university and beyond.`;
 
     return ps;
   }
