@@ -1904,9 +1904,18 @@
     document.body.removeChild(a); URL.revokeObjectURL(url);
   }
 
+  function getPSBaseName() {
+    const name = document.getElementById('applicantName').value.trim() || 'Applicant';
+    const type = getSelectedType() || 'ucas';
+    return `Personal_Statement_${type}_${name.replace(/\s+/g, '_')}`;
+  }
+
   function downloadTextFile() {
     if (!generatedPSText) { alert('请先生成 PS 再下载！'); return; }
-    downloadTxt(getPSBaseName());
+    const name = document.getElementById('applicantName').value.trim() || 'Applicant';
+    const type = getSelectedType() || 'ucas';
+    const baseName = `Personal_Statement_${type}_${name.replace(/\s+/g, '_')}`;
+    downloadTxt(baseName);
   }
 
   // ============ Copy PS Text ============
@@ -2148,8 +2157,10 @@
       // 方案1：CloudBase 云函数（优先）
       if (typeof cloudbase !== 'undefined') {
         try {
-          const app = cloudbase.init({ env: 'ps-writer-d7gxnn1gne877154f' });
-          await app.auth().anonymousAuthProvider().signIn();
+          const app = cloudbase.init({
+            env: 'ps-writer-d7gxnn1gne877154f',
+            accessKey: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjlkMWRjMzFlLWI0ZDAtNDQ4Yi1hNzZmLWIwY2M2M2Q4MTQ5OCJ9.eyJpc3MiOiJodHRwczovL3BzLXdyaXRlci1kN2d4bm4xZ25lODc3MTU0Zi5hcC1zaGFuZ2hhaS50Y2ItYXBpLnRlbmNlbnRjbG91ZGFwaS5jb20iLCJzdWIiOiJhbm9uIiwiYXVkIjoicHMtd3JpdGVyLWQ3Z3hubjFnbmU4NzcxNTRmIiwiZXhwIjo0MDg2ODU2Mzg0LCJpYXQiOjE3ODMxNzMxODQsIm5vbmNlIjoicGY3U1piNWZSZC1ybWhIVDdOV00yQSIsImF0X2hhc2giOiJwZjdTWmI1ZlJkLXJtaEhUN05XTTJBIiwibmFtZSI6IkFub255bW91cyIsInNjb3BlIjoiYW5vbnltb3VzIiwicHJvamVjdF9pZCI6InBzLXdyaXRlci1kN2d4bm4xZ25lODc3MTU0ZiIsIm1ldGEiOnsicGxhdGZvcm0iOiJQdWJsaXNoYWJsZUtleSJ9LCJ1c2VyX3R5cGUiOiIiLCJjbGllbnRfdHlwZSI6ImNsaWVudF91c2VyIiwiaXNfc3lzdGVtX2FkbWluIjpmYWxzZX0.gi5ezuf_H6HKNnddZWQOY3F_IvA27ZXX1PEu5DHunxG6WOFEtI7zQGOUK1GL_lLAWmhEl75rrGJFWtcQQAoXr7biY59KPHqYElDFAODi0XxkLUTCRd1VQ0TwFPqqHRH9fbfDovSRAxREfR9Ag9Xr2yqUv0gj6AtWJXF6uTGzVGJYq2avr0zC4FaZGbdZr-QgBG3pGAuWvGuRy-Gb7yPh-rBINI4NqVf39OE0WuaKezDQsdwoAsuGorbCyUERkYwryuvz-wY5N3GF64ndENgF0vBH9IzzcHvfIPN6rwAoAnLbgaj6UT9wZjTA9T-UWUyc8L7Bi7w9fK8FdOBYJjt_iQ'
+          });
           const res = await app.callFunction({
             name: 'generate-ps',
             data: { apiKey, type: data.metadata.type, name: data.metadata.applicantName, questions: data.questions }
