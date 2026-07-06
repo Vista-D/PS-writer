@@ -124,6 +124,22 @@
     color: var(--text);
   }
   .theme-toggle:hover { transform: scale(1.1); }
+  .lang-toggle {
+    position: fixed;
+    top: 68px;
+    right: 20px;
+    z-index: 100;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: all 0.3s;
+    color: var(--text);
+  }
+  .lang-toggle:hover { transform: scale(1.05); }
 
   /* Type Selection */
   .type-selection {
@@ -750,14 +766,15 @@
 <body>
 
 <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">🌙</div>
+<div class="lang-toggle" id="langToggle" onclick="toggleLang()">中文</div>
 
 <div class="container">
 
   <!-- Header -->
   <div class="header">
-    <h1>📝 Personal Statement 文书素材采集</h1>
-    <p>请用中文详细回答以下问题。答案越具体，生成的文书质量越高。</p>
-    <div class="progress-text" id="progressText">已完成 0 / 30 题</div>
+    <h1 data-i18n="title">📝 Personal Statement 文书素材采集</h1>
+    <p data-i18n="header_desc">请用中文详细回答以下问题。答案越具体，生成的文书质量越高。</p>
+    <div class="progress-text" id="progressText" data-i18n="progress_0">已完成 0 / 30 题</div>
   </div>
 
   <!-- Progress Bar -->
@@ -769,26 +786,26 @@
 
   <!-- Type Selection -->
   <div class="type-selection" id="typeSection">
-    <h2>🎯 请选择你要申请的文书类型</h2>
+    <h2 data-i18n="sel_type">🎯 请选择你要申请的文书类型</h2>
     <div class="type-options">
       <div class="type-option" data-type="ucas" onclick="selectType('ucas')">
         <span class="icon">🇬🇧</span>
-        <div class="label">英国 UCAS 本科</div>
-        <div class="desc">UCAS Personal Statement，适用于英国本科申请<br>4000字符以内，约47行</div>
+        <div class="label" data-i18n="ucas_label">英国 UCAS 本科</div>
+        <div class="desc" data-i18n="ucas_desc">UCAS Personal Statement，适用于英国本科申请<br>4000字符以内，约47行</div>
       </div>
       <div class="type-option" data-type="hongkong" onclick="selectType('hongkong')">
         <span class="icon">🇭🇰</span>
-        <div class="label">香港大学</div>
-        <div class="desc">香港大学个人陈述，适用于港大/港中文/港科大等<br>500-1000词，需说明 Why Hong Kong</div>
+        <div class="label" data-i18n="hk_label">香港大学</div>
+        <div class="desc" data-i18n="hk_desc">香港大学个人陈述，适用于港大/港中文/港科大等<br>500-1000词，需说明 Why Hong Kong</div>
       </div>
     </div>
   </div>
 
   <!-- Save Settings -->
   <div class="save-settings">
-    <h3>⚙️ 个人信息</h3>
+    <h3 data-i18n="personal_info">⚙️ 个人信息</h3>
     <div class="save-row" style="margin-top:8px;">
-      <label>申请人姓名</label>
+      <label data-i18n="applicant_name">申请人姓名</label>
       <input type="text" id="applicantName" placeholder="请输入你的英文姓名 (如: Zhang San)" oninput="saveToLocal()">
     </div>
     <div class="save-row" style="margin-top:8px;">
@@ -808,8 +825,8 @@
     <div class="section" data-section="1">
       <div class="section-header">
         <div class="section-number">1</div>
-        <div class="section-title">基本信息</div>
-        <div class="section-desc">让我先了解你的基本情况</div>
+        <div class="section-title" data-i18n="sec1_title">基本信息</div>
+        <div class="section-desc" data-i18n="sec1_desc">让我先了解你的基本情况</div>
       </div>
 
       <div class="question imp-5" data-q="1">
@@ -857,8 +874,8 @@
     <div class="section" data-section="2">
       <div class="section-header">
         <div class="section-number">2</div>
-        <div class="section-title">学术兴趣起源</div>
-        <div class="section-desc">你对这个专业的热情从何而来</div>
+        <div class="section-title" data-i18n="sec2_title">学术兴趣起源</div>
+        <div class="section-desc" data-i18n="sec2_desc">你对这个专业的热情从何而来</div>
       </div>
 
       <div class="question imp-5" data-q="5">
@@ -906,8 +923,8 @@
     <div class="section" data-section="3">
       <div class="section-header">
         <div class="section-number">3</div>
-        <div class="section-title">课内学术经历</div>
-        <div class="section-desc">展示你的学术能力和成绩</div>
+        <div class="section-title" data-i18n="sec3_title">课内学术经历</div>
+        <div class="section-desc" data-i18n="sec3_desc">展示你的学术能力和成绩</div>
       </div>
 
       <div class="question imp-5" data-q="9">
@@ -965,8 +982,8 @@
     <div class="section" data-section="4">
       <div class="section-header">
         <div class="section-number">4</div>
-        <div class="section-title">课外拓展与实践</div>
-        <div class="section-desc">展示你的综合素质和实践能力</div>
+        <div class="section-title" data-i18n="sec4_title">课外拓展与实践</div>
+        <div class="section-desc" data-i18n="sec4_desc">展示你的综合素质和实践能力</div>
       </div>
 
       <div class="question imp-3" data-q="14">
@@ -1044,8 +1061,8 @@
     <div class="section" data-section="5">
       <div class="section-header">
         <div class="section-number">5</div>
-        <div class="section-title">个人特质与动机</div>
-        <div class="section-desc">展示你的独特性和为什么选择这个目标</div>
+        <div class="section-title" data-i18n="sec5_title">个人特质与动机</div>
+        <div class="section-desc" data-i18n="sec5_desc">展示你的独特性和为什么选择这个目标</div>
       </div>
 
       <div class="question imp-2" data-q="21">
@@ -1113,8 +1130,8 @@
     <div class="section" data-section="6">
       <div class="section-header">
         <div class="section-number">6</div>
-        <div class="section-title">补充信息</div>
-        <div class="section-desc">还有什么想说的？</div>
+        <div class="section-title" data-i18n="sec6_title">补充信息</div>
+        <div class="section-desc" data-i18n="sec6_desc">还有什么想说的？</div>
       </div>
 
       <div class="question imp-1" data-q="27">
@@ -1161,8 +1178,8 @@
 
   <!-- ★ AI 设置 -->
   <div class="ai-section" id="aiSection">
-    <h3>🤖 AI 增强生成</h3>
-    <div class="sub">
+    <h3 data-i18n="ai_title">🤖 AI 增强生成</h3>
+    <div class="sub" data-i18n="ai_desc">
       使用 AI（DeepSeek）将你的中文答案翻译润色成地道英文，效果远超模板生成。
     </div>
 
@@ -1198,57 +1215,57 @@
 
   <!-- ★ 生成按钮 -->
   <div class="generate-section" id="generateSection">
-    <h2>🚀 一键生成 Personal Statement</h2>
-    <p id="genMethodLabel">当前模式：📝 模板引擎（免费，中译英+润色）</p>
-    <button class="btn-generate" id="btnGenerate" onclick="handleGenerate()">
+    <h2 data-i18n="generate_title">🚀 一键生成 Personal Statement</h2>
+    <p id="genMethodLabel" data-i18n="gen_label_template">当前模式：📝 模板引擎（免费，中译英+润色）</p>
+    <button class="btn-generate" id="btnGenerate" onclick="handleGenerate()" data-i18n="gen_btn">
       ✨ 生成我的 Personal Statement
     </button>
   </div>
 
   <!-- ★ NEW: PS 预览与下载 -->
   <div class="ps-preview" id="psPreview">
-    <h3>📄 你的 Personal Statement 草稿</h3>
+    <h3 data-i18n="ps_preview_title">📄 你的 Personal Statement 草稿</h3>
     <div class="ps-stats" id="psStats"></div>
     <div class="ps-content" id="psContent"></div>
     <div class="ps-actions">
-      <button class="btn-download" onclick="downloadPDF()">📄 下载 PDF</button>
-      <button class="btn-copy-ps" onclick="downloadDocx()">📥 Word 文档</button>
-      <button class="btn-copy-ps" onclick="downloadTextFile()">📝 TXT 文本</button>
-      <button class="btn-copy-ps" onclick="copyPSText()">📋 复制</button>
-      <button class="btn-share" onclick="sharePS()">📤 分享</button>
-      <button class="btn-copy-ps" onclick="checkPSRequirements()">🔄 重新检查</button>
+      <button class="btn-download" onclick="downloadPDF()" data-i18n="dl_pdf">📄 下载 PDF</button>
+      <button class="btn-copy-ps" onclick="downloadDocx()" data-i18n="dl_docx">📥 Word 文档</button>
+      <button class="btn-copy-ps" onclick="downloadTextFile()" data-i18n="dl_txt">📝 TXT 文本</button>
+      <button class="btn-copy-ps" onclick="copyPSText()" data-i18n="copy_ps">📋 复制</button>
+      <button class="btn-share" onclick="sharePS()" data-i18n="share">📤 分享</button>
+      <button data-i18n="recheck" class="btn-copy-ps" onclick="checkPSRequirements()">🔄 重新检查</button>
     </div>
     <!-- 检查结果区 -->
     <div class="check-results" id="checkResults" style="display:none;">
-      <h4 style="margin:0 0 12px 0;">📋 学校要求对照检查</h4>
+      <h4 style="margin:0 0 12px 0;" data-i18n="check_results_title">📋 学校要求对照检查</h4>
       <div id="checkResultsContent"></div>
     </div>
-    <p style="font-size:12px;color:var(--text-light);margin-top:12px;text-align:center;">
+    <p style="font-size:12px;color:var(--text-light);margin-top:12px;text-align:center;" data-i18n="ps_tip">
       💡 草稿生成后，建议发送给 AI 进一步优化润色
     </p>
   </div>
 
   <!-- Auto-save indicator -->
-  <div class="save-indicator" id="saveIndicator">💾 已自动保存</div>
+  <div class="save-indicator" id="saveIndicator" data-i18n="saved">💾 已自动保存</div>
 
   <!-- Bottom Actions -->
   <div class="actions">
-    <button class="btn-secondary" onclick="clearAll()">🗑️ 清空所有</button>
-    <button class="btn-secondary" onclick="clearSavedData()">💾 清除保存</button>
-    <button class="btn-secondary" onclick="scrollToTop()">⬆️ 回到顶部</button>
-    <button class="btn-success" onclick="exportJSON()">📤 导出答案 (JSON)</button>
+    <button class="btn-secondary" onclick="clearAll()" data-i18n="clear_all">🗑️ 清空所有</button>
+    <button class="btn-secondary" onclick="clearSavedData()" data-i18n="clear_save">💾 清除保存</button>
+    <button class="btn-secondary" onclick="scrollToTop()" data-i18n="scroll_top">⬆️ 回到顶部</button>
+    <button class="btn-success" onclick="exportJSON()" data-i18n="export_json">📤 导出答案 (JSON)</button>
   </div>
 
   <!-- Response Area -->
   <div class="response-area" id="responseArea">
-    <h3>📋 导出的答案</h3>
-    <p style="font-size:13px;color:var(--text-light);margin-bottom:10px;">
+    <h3 data-i18n="export_title">📋 导出的答案</h3>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:10px;" data-i18n="export_desc">
       请复制下方 JSON 并发送给 AI，AI 将根据你的答案生成 Personal Statement。
       注意：如果选择了 .docx 格式，AI 会调用脚本帮你生成 Word 文档。
     </p>
     <pre id="responsePre"></pre>
     <div class="modal-actions" style="margin-top:12px;">
-      <button class="btn-primary" onclick="copyResponse()">📋 复制</button>
+      <button class="btn-primary" onclick="copyResponse()" data-i18n="copy">📋 复制</button>
     </div>
   </div>
 </div>
@@ -1256,12 +1273,12 @@
 <!-- Success Modal -->
 <div class="modal-overlay" id="successModal">
   <div class="modal">
-    <h2>✅ 导出成功！</h2>
-    <p style="margin-bottom:16px;color:var(--text-light);">你的答案已准备好。请复制以下 JSON 并发送给 AI。</p>
+    <h2 data-i18n="export_ok">✅ 导出成功！</h2>
+    <p style="margin-bottom:16px;color:var(--text-light);" data-i18n="export_ok_desc">你的答案已准备好。请复制以下 JSON 并发送给 AI。</p>
     <textarea id="modalOutput" readonly></textarea>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">关闭</button>
-      <button class="btn-primary" onclick="copyModal()">📋 复制 JSON</button>
+      <button class="btn-secondary" onclick="closeModal()" data-i18n="close">关闭</button>
+      <button class="btn-primary" onclick="copyModal()" data-i18n="copy_json">📋 复制 JSON</button>
     </div>
   </div>
 </div>
@@ -2021,13 +2038,13 @@
     if (!apiKey) {
       // 无 API Key 时显示小提示，引导用户填入
       resultsDiv.style.display = 'block';
-      contentDiv.innerHTML = `<p style="color:var(--text-light);margin:0;">💡 输入 DeepSeek API Key 后，AI 会自动检查这篇文书是否符合目标学校的要求。</p>`;
+      contentDiv.innerHTML = `<p style="color:var(--text-light);margin:0;">${i18n[currentLang].check_no_key}</p>`;
       return;
     }
 
     // 开始自动检查
     resultsDiv.style.display = 'block';
-    contentDiv.innerHTML = '<p style="color:var(--text-light);margin:0;">⏳ 正在自动对照学校要求检查...</p>';
+    contentDiv.innerHTML = `<p style="color:var(--text-light);margin:0;">${i18n[currentLang].check_loading}</p>`;
 
     // 延迟一点执行，避免阻塞渲染
     setTimeout(() => runCheck(apiKey), 100);
@@ -2545,10 +2562,297 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  // ============ i18n 语言切换系统 ============
+  let currentLang = localStorage.getItem('ps_lang') || 'zh';
+
+  const i18n = {
+    zh: {
+      title: '📝 Personal Statement 文书素材采集',
+      header_desc: '请用中文详细回答以下问题。答案越具体，生成的文书质量越高。',
+      sel_type: '🎯 请选择你要申请的文书类型',
+      ucas_label: '英国 UCAS 本科',
+      ucas_desc: 'UCAS Personal Statement，适用于英国本科申请<br>4000字符以内，约47行',
+      hk_label: '香港大学',
+      hk_desc: '香港大学个人陈述，适用于港大/港中文/港科大等<br>500-1000词，需说明 Why Hong Kong',
+      personal_info: '⚙️ 个人信息',
+      applicant_name: '申请人姓名',
+      save_format: '保存格式',
+      generate_title: '🚀 一键生成 Personal Statement',
+      gen_label_template: '当前模式：📝 模板引擎（免费，中译英+润色）',
+      gen_btn: '✨ 生成我的 Personal Statement',
+      ps_preview_title: '📄 你的 Personal Statement 草稿',
+      dl_pdf: '📄 下载 PDF',
+      dl_docx: '📥 Word 文档',
+      dl_txt: '📝 TXT 文本',
+      copy_ps: '📋 复制',
+      share: '📤 分享',
+      recheck: '🔄 重新检查',
+      check_results_title: '📋 学校要求对照检查',
+      ps_tip: '💡 草稿生成后，建议发送给 AI 进一步优化润色',
+      saved: '💾 已自动保存',
+      clear_all: '🗑️ 清空所有',
+      clear_save: '💾 清除保存',
+      scroll_top: '⬆️ 回到顶部',
+      export_json: '📤 导出答案 (JSON)',
+      export_title: '📋 导出的答案',
+      export_desc: '请复制下方 JSON 并发送给 AI，AI 将根据你的答案生成 Personal Statement。',
+      export_ok: '✅ 导出成功！',
+      export_ok_desc: '你的答案已准备好。请复制以下 JSON 并发送给 AI。',
+      copy: '📋 复制',
+      close: '关闭',
+      copy_json: '📋 复制 JSON',
+      sec1_title: '基本信息',
+      sec1_desc: '让我先了解你的基本情况',
+      sec2_title: '学术兴趣起源',
+      sec2_desc: '你对这个专业的热情从何而来',
+      sec3_title: '课内学术经历',
+      sec3_desc: '展示你的学术能力和成绩',
+      sec4_title: '课外拓展与实践',
+      sec4_desc: '展示你的综合素质和实践能力',
+      sec5_title: '个人特质与动机',
+      sec5_desc: '展示你的独特性和为什么选择这个目标',
+      sec6_title: '补充信息',
+      sec6_desc: '还有什么想说的？',
+      // 30 道题
+      q: [
+        { q: '你的目标大学和目标专业是什么？', h: '请列出你想申请的大学全称和专业名称。如果是 UCAS 可以填多个志愿。例：University of Cambridge, Computer Science' },
+        { q: '你目前就读的学校和课程是什么？', h: '如：北京四中, A-Level / 人大附中, IB Diploma / 清华大学, 本科大三' },
+        { q: '你的目标入学年份是？', h: '如：2025年秋季 / 2026年秋季' },
+        { q: '你的英语水平如何？（标化成绩）', h: 'IELTS/TOEFL/PTE 等成绩。如：IELTS 7.5 (阅读8.5, 听力8.0, 写作6.5, 口语7.0)' },
+        { q: '你为什么选择这个专业？请用一段话描述你的兴趣来源。', h: '不要只说"感兴趣"，要讲一个具体的故事或契机。如：某次实验、某本书、某个老师的课、某次参观等' },
+        { q: '有没有一个具体的经历、事件、书籍或人物激发了你对这个专业的热情？', h: '描述具体的细节：时间、地点、你当时的感受、你做了什么。这是 PS 开头的最佳素材！' },
+        { q: '这个专业中最吸引你的细分方向或话题是什么？', h: '如：计算机专业中对人工智能/机器学习感兴趣；经济学中对行为经济学感兴趣' },
+        { q: '你读过哪些与专业相关的课外书籍、文章或学术论文？', h: '列出书名/标题、作者、你的主要收获。如：Richard Dawkins《The Selfish Gene》让我重新理解了...' },
+        { q: '你学了哪些与申请专业相关的课程？成绩如何？', h: '列出具体科目和成绩/等级。如：A-Level Mathematics (A*), Further Mathematics (A), Physics (A*)' },
+        { q: '哪门课或哪个知识点让你印象最深？学到了什么独特的见解？', h: '不要只报课名，要讲具体的知识点和你的思考。如：在物理课上学到量子力学的不确定性原理后，我认识到...' },
+        { q: '你有没有做过与专业相关的项目、研究或论文？', h: 'EPQ项目、课程研究、独立项目等。描述项目内容、你的角色、成果和收获' },
+        { q: '你参加过哪些学科竞赛？取得了什么成绩？', h: '如：AMC12 前5%、BPhO 银奖、全国高中生数学竞赛省一等奖、UKCHO 金奖等' },
+        { q: '你掌握了哪些与专业相关的硬技能？', h: '如：Python编程、数据分析、实验操作、CAD设计、统计软件(SPSS/R)、文献检索等' },
+        { q: '你有过与专业相关的实习或工作经历吗？具体做了什么？', h: '如：在科技公司实习做数据分析、在医院做志愿者、在律所当见习生等' },
+        { q: '你参与过科研项目吗？你的角色和贡献是什么？', h: '如：暑期科研项目、大学实验室经历、与教授合作的研究等' },
+        { q: '你参加过哪些社团或学生会活动？担任过什么职务？', h: '如：辩论社社长、学生会副主席、模联代表、编程社创始人等' },
+        { q: '你有过志愿服务或社会公益经历吗？对你有什么影响？', h: '描述具体的志愿活动：支教、敬老院、动物保护、社区服务等。重点说明你的感受和成长' },
+        { q: '你有过跨文化交流或国际经历吗？', h: '如：出国交换、海外夏令营、国际竞赛、线上跨国合作项目等。对申请香港尤其重要' },
+        { q: '请举例说明你的领导力经历。', h: '描述具体事件：你带领团队做了什么、遇到了什么困难、如何解决的、结果如何' },
+        { q: '请举例说明你在团队合作中发挥重要作用的经历。', h: '团队项目、小组作业、社团活动等。说明你在团队中的角色和具体贡献' },
+        { q: '你认为自己最大的三个优点是什么？请用事例支撑。', h: '不要只说"我勤奋"、"我聪明"。要用具体事例证明。如：坚持每天写代码2小时持续一年、辩论赛备赛通宵等' },
+        { q: '描述一次你克服困难或挑战的经历及收获。', h: '这展示了你的 resilience（韧性）。可以是学业上的、生活中的、竞赛中的挑战' },
+        { q: '你为什么要去英国/香港留学？你对目标国家/地区有什么了解？', h: '如果是香港：香港的国际化环境、中西文化交融、教育体系特点等。如果是英国：学术传统、教学方式等' },
+        { q: '你为什么选择这所大学？它的什么特色吸引你？', h: '具体到课程设置、教授研究方向、学校资源、实验室设施等。展示你做了充分的研究' },
+        { q: '你毕业后的职业规划是什么？', h: '短期和长期目标。如：毕业后进入投行做分析师，长期目标是成为基金经理/创业' },
+        { q: '你认为你能为大学的社区带来什么独特的贡献？', h: '你的独特经历、文化背景、特殊技能、与众不同的视角等。香港大学尤其看重这一点' },
+        { q: '以上没有覆盖到但你认为重要的经历或信息是什么？', h: '任何你认为对申请有帮助但前面没来得及说的内容' },
+        { q: '你的成长背景或家庭环境如何塑造了现在的你？', h: '特别对于香港申请，这部分可以展示你的独特视角。如：父母的职业影响了你的兴趣、成长环境让你有了不同的世界观' },
+        { q: '你有什么特别的兴趣爱好或特长？是否与专业有联系？', h: '如：弹钢琴培养了纪律性、马拉松锻炼了毅力、摄影培养了观察力等。可以尝试找到与专业的连接' },
+        { q: '最后，还有什么想补充的吗？任何想对招生官说的话。', h: '自由发挥，可以是对自己申请的总结、特别的感受、想要强调的重点' }
+      ],
+      tags: { required: '必填', recommended: '强烈推荐', suggested: '建议填', optional: '选填', free: '可选' },
+      gen_label_ai: '当前模式：🤖 AI 生成（DeepSeek API）',
+      progress_fmt: (n, t) => `已完成 ${n} / ${t} 题`,
+      chars_fmt: n => `已输入 ${n} 字`,
+      saved_success: '💾 已自动保存',
+      // 自动检查提示
+      check_no_key: '💡 输入 DeepSeek API Key 后，AI 会自动检查这篇文书是否符合目标学校的要求。',
+      ai_title: '🤖 AI 增强生成',
+      ai_desc: '使用 AI（DeepSeek）将你的中文答案翻译润色成地道英文，效果远超模板生成。',
+      check_loading: '⏳ 正在自动对照学校要求检查...',
+      check_error: '检查失败',
+    },
+    en: {
+      title: '📝 Personal Statement Builder',
+      header_desc: 'Answer the questions in detail. The more specific your answers, the better your Personal Statement will be.',
+      sel_type: '🎯 Select Your Application Type',
+      ucas_label: 'UK UCAS Undergraduate',
+      ucas_desc: 'UCAS Personal Statement for UK universities<br>Max 4000 characters, ~47 lines',
+      hk_label: 'Hong Kong Universities',
+      hk_desc: 'HK university personal statement for HKU/CUHK/HKUST<br>500-1000 words, needs Why Hong Kong',
+      personal_info: '⚙️ Personal Info',
+      applicant_name: 'Applicant Name',
+      save_format: 'Save Format',
+      generate_title: '🚀 Generate Personal Statement',
+      gen_label_template: 'Current Mode: 📝 Template Engine (Free)',
+      gen_btn: '✨ Generate My Personal Statement',
+      ps_preview_title: '📄 Your Personal Statement Draft',
+      dl_pdf: '📄 Download PDF',
+      dl_docx: '📥 Word Doc',
+      dl_txt: '📝 TXT Text',
+      copy_ps: '📋 Copy',
+      share: '📤 Share',
+      recheck: '🔄 Recheck',
+      check_results_title: '📋 School Requirements Check',
+      ps_tip: '💡 After generating, you can send it to AI for further polishing.',
+      saved: '💾 Auto-saved',
+      clear_all: '🗑️ Clear All',
+      clear_save: '💾 Clear Saved',
+      scroll_top: '⬆️ Back to Top',
+      export_json: '📤 Export Answers (JSON)',
+      export_title: '📋 Exported Answers',
+      export_desc: 'Copy the JSON below and send it to AI to generate your Personal Statement.',
+      export_ok: '✅ Export Successful!',
+      export_ok_desc: 'Your answers are ready. Copy the JSON below and send it to AI.',
+      copy: '📋 Copy',
+      close: 'Close',
+      copy_json: '📋 Copy JSON',
+      sec1_title: 'Basic Information',
+      sec1_desc: 'Let us get to know you',
+      sec2_title: 'Academic Interest Origin',
+      sec2_desc: 'Where does your passion for this subject come from?',
+      sec3_title: 'Academic Experience',
+      sec3_desc: 'Show your academic ability and achievements',
+      sec4_title: 'Extracurricular & Practice',
+      sec4_desc: 'Show your comprehensive qualities',
+      sec5_title: 'Personal Qualities & Motivation',
+      sec5_desc: 'Show what makes you unique',
+      sec6_title: 'Additional Information',
+      sec6_desc: 'Anything else you want to share?',
+      // 30 questions
+      q: [
+        { q: 'What is your target university and major?', h: 'List the full names of the universities and programs you are applying to. For UCAS you can list multiple choices. E.g., University of Cambridge, Computer Science' },
+        { q: 'What school are you currently attending and what courses are you taking?', h: 'E.g., Beijing No.4 High School, A-Level / The High School Affiliated to RDFZ, IB Diploma / Tsinghua University, Year 3 Undergraduate' },
+        { q: 'What is your intended enrollment year?', h: 'E.g., Fall 2025 / Fall 2026' },
+        { q: 'What is your English proficiency level? (Standardized test scores)', h: 'IELTS/TOEFL/PTE scores. E.g., IELTS 7.5 (Reading 8.5, Listening 8.0, Writing 6.5, Speaking 7.0)' },
+        { q: 'Why did you choose this major? Describe the origin of your interest.', h: 'Do not just say "I am interested." Tell a specific story or moment. E.g., an experiment, a book, a teacher\'s class, a visit, etc.' },
+        { q: 'Is there a specific experience, event, book, or person that sparked your passion for this subject?', h: 'Describe specific details: time, place, how you felt, what you did. This is the best material for your PS opening!' },
+        { q: 'What sub-field or topic in this major attracts you the most?', h: 'E.g., AI/Machine Learning in Computer Science; Behavioral Economics in Economics' },
+        { q: 'What extracurricular books, articles, or academic papers related to your major have you read?', h: 'List titles, authors, and your key takeaways. E.g., Richard Dawkins\' "The Selfish Gene" made me rethink...' },
+        { q: 'What courses related to your intended major have you taken? What were your grades?', h: 'List specific subjects and grades. E.g., A-Level Mathematics (A*), Further Mathematics (A), Physics (A*)' },
+        { q: 'Which course or topic left the deepest impression on you? What unique insight did you gain?', h: 'Do not just name courses. Explain specific knowledge and your thinking. E.g., learning about the uncertainty principle in Physics made me realize...' },
+        { q: 'Have you done any projects, research, or papers related to your major?', h: 'EPQ projects, course research, independent projects. Describe content, your role, outcomes, and what you learned.' },
+        { q: 'What subject competitions have you participated in? What achievements did you make?', h: 'E.g., AMC12 top 5%, BPhO Silver, National High School Math Competition First Prize, UKCHO Gold, etc.' },
+        { q: 'What hard skills related to your major have you mastered?', h: 'E.g., Python programming, data analysis, lab operations, CAD design, statistical software (SPSS/R), literature searching, etc.' },
+        { q: 'Do you have any internship or work experience related to your major? What did you do?', h: 'E.g., data analysis internship at a tech company, volunteer at a hospital, internship at a law firm, etc.' },
+        { q: 'Have you participated in any research projects? What was your role and contribution?', h: 'E.g., summer research program, university lab experience, research with a professor, etc.' },
+        { q: 'What clubs or student council activities have you participated in? What positions did you hold?', h: 'E.g., Debate Club President, Student Council Vice President, MUN delegate, Coding Club founder, etc.' },
+        { q: 'Do you have any volunteer or community service experience? How did it affect you?', h: 'Describe specific volunteer activities: teaching, nursing home, animal protection, community service. Focus on your feelings and growth.' },
+        { q: 'Do you have any cross-cultural or international experience?', h: 'E.g., exchange abroad, international summer camp, international competition, online cross-cultural projects. Especially important for HK applications.' },
+        { q: 'Please give an example of your leadership experience.', h: 'Describe a specific event: what you led your team to do, what difficulties you encountered, how you resolved them, and the outcome.' },
+        { q: 'Please give an example of a time when you played an important role in teamwork.', h: 'Team projects, group assignments, club activities. Explain your role and specific contributions.' },
+        { q: 'What are your top three strengths? Support them with examples.', h: 'Do not just say "I am hardworking" or "I am smart." Use specific evidence. E.g., practicing coding for 2 hours daily for a year, all-nighters for debate competitions, etc.' },
+        { q: 'Describe a time you overcame a difficulty or challenge and what you learned.', h: 'This demonstrates your resilience. It can be academic, personal, or competition-related challenges.' },
+        { q: 'Why do you want to study in the UK/Hong Kong? What do you know about your target country/region?', h: 'For HK: international environment, East-meets-West culture, education system features. For UK: academic tradition, teaching style, etc.' },
+        { q: 'Why did you choose this university? What features attract you?', h: 'Be specific about curriculum, professor research directions, university resources, lab facilities. Show you did thorough research.' },
+        { q: 'What are your career plans after graduation?', h: 'Short-term and long-term goals. E.g., join an investment bank as an analyst, long-term goal to become a fund manager or start a business.' },
+        { q: 'What unique contribution can you bring to the university community?', h: 'Your unique experiences, cultural background, special skills, different perspectives. HK universities especially value this.' },
+        { q: 'Is there any important experience or information not covered above?', h: 'Anything you think is helpful for your application that you did not have a chance to mention.' },
+        { q: 'How has your upbringing or family environment shaped who you are?', h: 'Especially for HK applications, this can show your unique perspective. E.g., parents\' careers influenced your interests, growing environment gave you a different worldview.' },
+        { q: 'Do you have any special hobbies or talents? Do they relate to your major?', h: 'E.g., piano playing cultivated discipline, marathon built perseverance, photography trained observation. Try to connect to your major.' },
+        { q: 'Finally, anything else you would like to add? Any message for the admissions officers?', h: 'Feel free to add a summary of your application, special feelings, or key points you want to emphasize.' }
+      ],
+      ai_title: '🤖 AI Enhanced Generation',
+      ai_desc: 'Use AI (DeepSeek) to translate and polish your Chinese answers into authentic English.',
+      tags: { required: 'Required', recommended: 'Highly Recommended', suggested: 'Suggested', optional: 'Optional', free: 'Optional' },
+      gen_label_ai: 'Current Mode: 🤖 AI Generate (DeepSeek API)',
+      progress_fmt: (n, t) => `${n} / ${t} completed`,
+      chars_fmt: n => `${n} chars entered`,
+      saved_success: '💾 Auto-saved',
+      check_no_key: '💡 After entering your DeepSeek API Key, AI will automatically check this PS against target school requirements.',
+      check_loading: '⏳ Auto-checking against school requirements...',
+      check_error: 'Check failed',
+    }
+  };
+
+  function toggleLang() {
+    currentLang = currentLang === 'zh' ? 'en' : 'zh';
+    localStorage.setItem('ps_lang', currentLang);
+    applyLang();
+  }
+
+  function initLang() {
+    currentLang = localStorage.getItem('ps_lang') || 'zh';
+    applyLang();
+  }
+
+  function applyLang() {
+    const lang = i18n[currentLang];
+    const btn = document.getElementById('langToggle');
+    if (btn) btn.textContent = currentLang === 'zh' ? 'EN' : '中文';
+
+    // 更新 html lang 属性
+    document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+
+    // 翻译所有带 data-i18n 的元素
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (lang[key]) {
+        el.innerHTML = lang[key];
+      }
+    });
+
+    // 翻译 30 道题
+    for (let i = 0; i < 30; i++) {
+      const qDiv = document.querySelector(`.question[data-q="${i + 1}"]`);
+      if (!qDiv || !lang.q[i]) continue;
+      const qText = qDiv.querySelector('.q-text');
+      const qHint = qDiv.querySelector('.q-hint');
+      if (qText) qText.textContent = lang.q[i].q;
+      if (qHint) qHint.textContent = lang.q[i].h;
+    }
+
+    // 翻译标签 (必填/建议填等)
+    document.querySelectorAll('.tag').forEach(el => {
+      const text = el.textContent.trim();
+      for (const [key, val] of Object.entries(lang.tags)) {
+        if (i18n.zh.tags[key] === text) {
+          el.textContent = val;
+          break;
+        }
+      }
+    });
+
+    // 翻译 method label（非 data-i18n，动态内容）
+    const methodLabel = document.getElementById('genMethodLabel');
+    if (methodLabel && genMethod) {
+      if (genMethod === 'ai') {
+        methodLabel.textContent = lang.gen_label_ai;
+      } else {
+        methodLabel.textContent = lang.gen_label_template;
+      }
+    }
+
+    // 刷新动态文本
+    updateProgress();
+    // 刷新各题字符计数
+    for (let i = 1; i <= 30; i++) {
+      const ta = document.querySelector(`.question[data-q="${i}"] textarea`);
+      if (ta) countChars(ta, i);
+    }
+  }
+
+  // 让 countChars 用当前语言
+  const _origCountChars = countChars;
+  countChars = function(textarea, qNum) {
+    _origCountChars(textarea, qNum);
+    const count = textarea.value.length;
+    const el = document.getElementById('c' + qNum);
+    if (el) {
+      const lang = i18n[currentLang];
+      el.textContent = lang.chars_fmt(count);
+    }
+  };
+
+  // 让 updateProgress 用当前语言
+  const _origUpdateProgress = updateProgress;
+  updateProgress = function() {
+    _origUpdateProgress();
+    const lang = i18n[currentLang];
+    const textareas = document.querySelectorAll('.question[data-q] textarea');
+    let answered = 0;
+    textareas.forEach(ta => { if (ta.value.trim().length > 0) answered++; });
+    document.getElementById('progressText').textContent = lang.progress_fmt(answered, totalQuestions);
+  };
+
+  // 让 setMethod 用当前语言
+  const _origSetMethod = setMethod;
+  setMethod = function(m) {
+    _origSetMethod(m);
+    applyLang();
+  };
+
   // ============ Init ============
   loadFromLocal();
   loadApiKey();
   updateProgress();
+  initLang(); // 初始化语言偏好
 </script>
 
 </body>
