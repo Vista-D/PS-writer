@@ -14,6 +14,8 @@
   window.docx = docx;
   window.docxLoaded = true;
 </script>
+<!-- html2pdf.js：在浏览器端生成 PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root {
     --bg: #f5f7fa;
@@ -714,7 +716,7 @@
 
   @media (max-width: 640px) {
     .ps-actions { flex-direction: column; }
-    .ps-actions button { width: 100%; }
+    .ps-actions button { width: 100%; min-width: 0; }
     .ps-preview { padding: 16px; }
     .ps-preview .ps-content { font-size: 13px; max-height: 300px; padding: 14px; }
     .ai-section .ai-row { flex-direction: column; }
@@ -1187,10 +1189,11 @@
     <div class="ps-stats" id="psStats"></div>
     <div class="ps-content" id="psContent"></div>
     <div class="ps-actions">
-      <button class="btn-download" onclick="downloadDocx()">📥 下载 Word 文档</button>
-      <button class="btn-copy-ps" onclick="downloadTextFile()">📝 下载 TXT</button>
-      <button class="btn-copy-ps" onclick="copyPSText()">📋 复制全文</button>
-      <button class="btn-share" onclick="sharePS()">📤 分享到微信</button>
+      <button class="btn-download" onclick="downloadPDF()">📄 下载 PDF</button>
+      <button class="btn-copy-ps" onclick="downloadDocx()">📥 Word 文档</button>
+      <button class="btn-copy-ps" onclick="downloadTextFile()">📝 TXT 文本</button>
+      <button class="btn-copy-ps" onclick="copyPSText()">📋 复制</button>
+      <button class="btn-share" onclick="sharePS()">📤 分享</button>
     </div>
     <p style="font-size:12px;color:var(--text-light);margin-top:12px;text-align:center;">
       💡 草稿生成后，建议发送给 AI 进一步优化润色
@@ -1916,6 +1919,30 @@
     const type = getSelectedType() || 'ucas';
     const baseName = `Personal_Statement_${type}_${name.replace(/\s+/g, '_')}`;
     downloadTxt(baseName);
+  }
+
+  // ============ Download as PDF ============
+  function downloadPDF() {
+    if (!generatedPSText) { alert('请先生成 PS 再下载！'); return; }
+
+    const name = document.getElementById('applicantName').value.trim() || 'Applicant';
+    const type = getSelectedType() || 'ucas';
+    const fileName = `Personal_Statement_${type}_${name.replace(/\s+/g, '_')}.pdf`;
+
+    // 创建一个临时的格式化容器
+    const el = document.createElement('div');
+    el.style.cssText = 'font-family: Times New Roman, serif; font-size: 12pt; line-height: 1.8; padding: 40px 50px; white-space: pre-wrap; word-wrap: break-word; color: #000; background: #fff;';
+    el.textContent = generatedPSText;
+
+    // 使用 html2pdf 转换
+    const opt = {
+      margin: [15, 15],
+      filename: fileName,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, letterRendering: true, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(el).save();
   }
 
   // ============ Copy PS Text ============
