@@ -621,6 +621,28 @@
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: #fff;
   }
+  .btn-check {
+    background: linear-gradient(135deg, #8e44ad, #9b59b6);
+    color: #fff;
+  }
+  .btn-check:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .check-results {
+    background: var(--section-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin-top: 16px;
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .check-results .tag-good { color: #27ae60; font-weight: bold; }
+  .check-results .tag-miss { color: #e74c3c; font-weight: bold; }
+  .check-results .tag-tip  { color: #8e44ad; font-weight: bold; }
+  .check-results ul { margin: 6px 0 10px 0; padding-left: 22px; }
+  .check-results li { margin-bottom: 4px; }
   .btn-copy-ps {
     background: var(--section-bg);
     color: var(--text);
@@ -1194,6 +1216,12 @@
       <button class="btn-copy-ps" onclick="downloadTextFile()">📝 TXT 文本</button>
       <button class="btn-copy-ps" onclick="copyPSText()">📋 复制</button>
       <button class="btn-share" onclick="sharePS()">📤 分享</button>
+      <button class="btn-copy-ps" onclick="checkPSRequirements()">🔄 重新检查</button>
+    </div>
+    <!-- 检查结果区 -->
+    <div class="check-results" id="checkResults" style="display:none;">
+      <h4 style="margin:0 0 12px 0;">📋 学校要求对照检查</h4>
+      <div id="checkResultsContent"></div>
     </div>
     <p style="font-size:12px;color:var(--text-light);margin-top:12px;text-align:center;">
       💡 草稿生成后，建议发送给 AI 进一步优化润色
@@ -1849,6 +1877,9 @@
     setTimeout(() => {
       document.getElementById('psPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 200);
+
+    // ✅ 自动触发学校要求检查（无需用户点击）
+    autoCheckPS();
   }
 
   // ============ Download as .docx / .txt ============
@@ -1978,6 +2009,204 @@
     }
 
     doc.save(fileName);
+  }
+
+  // ============ 自动检查：文书与学校要求匹配度 ============
+  /** 自动触发（无 alert，静默运行） */
+  function autoCheckPS() {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    const resultsDiv = document.getElementById('checkResults');
+    const contentDiv = document.getElementById('checkResultsContent');
+
+    if (!apiKey) {
+      // 无 API Key 时显示小提示，引导用户填入
+      resultsDiv.style.display = 'block';
+      contentDiv.innerHTML = `<p style="color:var(--text-light);margin:0;">💡 输入 DeepSeek API Key 后，AI 会自动检查这篇文书是否符合目标学校的要求。</p>`;
+      return;
+    }
+
+    // 开始自动检查
+    resultsDiv.style.display = 'block';
+    contentDiv.innerHTML = '<p style="color:var(--text-light);margin:0;">⏳ 正在自动对照学校要求检查...</p>';
+
+    // 延迟一点执行，避免阻塞渲染
+    setTimeout(() => runCheck(apiKey), 100);
+  }
+
+  /** 手动重新检查 */
+  async function checkPSRequirements() {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    if (!apiKey) {
+      showError('检查需要 AI 能力，请先输入 DeepSeek API Key');
+      document.getElementById('aiSteps').setAttribute('open', '');
+      return;
+    }
+    const btn = document.getElementById('btnCheckPS');
+    btn.disabled = true;
+    btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:4px;vertical-align:middle;"></span> 检查中...';
+    try {
+      await runCheck(apiKey);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🔄 重新检查';
+    }
+  }
+
+  /** 核心检查逻辑 */
+  async function runCheck(apiKey) {
+
+    // 从 Q1 提取目标大学和专业信息
+    const q1Textarea = document.querySelector('.question[data-q="1"] textarea');
+    const targetInfo = q1Textarea ? q1Textarea.value.trim() : '';
+
+    // 从 metadata 获取文书类型
+    const type = getSelectedType() || 'ucas';
+
+    const resultsDiv = document.getElementById('checkResults');
+    const contentDiv = document.getElementById('checkResultsContent');
+
+    resultsDiv.style.display = 'block';
+    contentDiv.innerHTML = '<p style="color:var(--text-light);">⏳ AI 正在分析文书与目标学校的匹配度，请稍候...</p>';
+
+    try {
+      let analysis;
+
+      // 优先走 CloudBase 云函数
+      if (typeof cloudbase !== 'undefined') {
+        try {
+          const app = cloudbase.init({
+            env: 'ps-writer-d7gxnn1gne877154f',
+            accessKey: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjlkMWRjMzFlLWI0ZDAtNDQ4Yi1hNzZmLWIwY2M2M2Q4MTQ5OCJ9.eyJpc3MiOiJodHRwczovL3BzLXdyaXRlci1kN2d4bm4xZ25lODc3MTU0Zi5hcC1zaGFuZ2hhaS50Y2ItYXBpLnRlbmNlbnRjbG91ZGFwaS5jb20iLCJzdWIiOiJhbm9uIiwiYXVkIjoicHMtd3JpdGVyLWQ3Z3hubjFnbmU4NzcxNTRmIiwiZXhwIjo0MDg2ODU2Mzg0LCJpYXQiOjE3ODMxNzMxODQsIm5vbmNlIjoicGY3U1piNWZSZC1ybWhIVDdOV00yQSIsImF0X2hhc2giOiJwZjdTWmI1ZlJkLXJtaEhUN05XTTJBIiwibmFtZSI6IkFub255bW91cyIsInNjb3BlIjoiYW5vbnltb3VzIiwicHJvamVjdF9pZCI6InBzLXdyaXRlci1kN2d4bm4xZ25lODc3MTU0ZiIsIm1ldGEiOnsicGxhdGZvcm0iOiJQdWJsaXNoYWJsZUtleSJ9LCJ1c2VyX3R5cGUiOiIiLCJjbGllbnRfdHlwZSI6ImNsaWVudF91c2VyIiwiaXNfc3lzdGVtX2FkbWluIjpmYWxzZX0.gi5ezuf_H6HKNnddZWQOY3F_IvA27ZXX1PEu5DHunxG6WOFEtI7zQGOUK1GL_lLAWmhEl75rrGJFWtcQQAoXr7biY59KPHqYElDFAODi0XxkLUTCRd1VQ0TwFPqqHRH9fbfDovSRAxREfR9Ag9Xr2yqUv0gj6AtWJXF6uTGzVGJYq2avr0zC4FaZGbdZr-QgBG3pGAuWvGuRy-Gb7yPh-rBINI4NqVf39OE0WuaKezDQsdwoAsuGorbCyUERkYwryuvz-wY5N3GF64ndENgF0vBH9IzzcHvfIPN6rwAoAnLbgaj6UT9wZjTA9T-UWUyc8L7Bi7w9fK8FdOBYJjt_iQ'
+          });
+          const res = await app.callFunction({
+            name: 'generate-ps',
+            data: {
+              mode: 'check',
+              apiKey: apiKey,
+              psText: generatedPSText,
+              type: type,
+              targetUniversity: targetInfo,
+              major: targetInfo.split('，')[0] || targetInfo.split(',')[0] || targetInfo
+            }
+          });
+          if (res.result && res.result.success) {
+            analysis = res.result.analysis;
+          } else {
+            throw new Error(res.result?.error || 'CloudBase 检查失败');
+          }
+        } catch (cbErr) {
+          console.warn('CloudBase check failed, falling back to direct API', cbErr);
+          analysis = await callDeepSeekCheckDirectly(apiKey, targetInfo, type, generatedPSText);
+        }
+      } else {
+        analysis = await callDeepSeekCheckDirectly(apiKey, targetInfo, type, generatedPSText);
+      }
+
+      // 渲染检查结果
+      contentDiv.innerHTML = formatCheckAnalysis(analysis);
+      resultsDiv.style.display = 'block';
+      resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (e) {
+      contentDiv.innerHTML = `<p style="color:#e74c3c;">❌ 检查失败：${e.message}</p>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🔍 对照学校要求检查';
+    }
+  }
+
+  /** 直连 DeepSeek 进行检查 */
+  async function callDeepSeekCheckDirectly(apiKey, targetInfo, type, psText) {
+    const typeLabel = type === 'ucas' ? '英国 UCAS' : '香港大学';
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: `你是资深大学招生官，擅长分析 Personal Statement 与目标院校的匹配度。
+
+请严格按以下结构输出（直接按格式写，不要额外说明）：
+
+✅ 覆盖得好的方面
+（列出 2-4 点该文书做得好的地方）
+
+⚠️ 需要改进或补充的方面
+（列出 2-4 点不足或遗漏）
+
+💡 改进建议
+（列出 2-3 条具体建议）`
+          },
+          {
+            role: 'user',
+            content: `目标大学/专业：${targetInfo || '(未填写)'}\n文书类型：${typeLabel}\n\n===== 文书全文 =====\n\n${psText}`
+          }
+        ],
+        temperature: 0.3, max_tokens: 2000
+      })
+    });
+    if (!response.ok) {
+      if (response.status === 401) throw new Error('API Key 无效');
+      if (response.status === 429) throw new Error('API 调用次数超限');
+      throw new Error(`API 错误 (${response.status})`);
+    }
+    const result = await response.json();
+    return result.choices[0].message.content.trim();
+  }
+
+  /** 格式化 AI 检查结果为 HTML */
+  function formatCheckAnalysis(text) {
+    // 用 ✅ ⚠️ 💡 分段
+    let html = '';
+    const sections = text.split(/(?=✅|⚠️|💡)/);
+    for (const section of sections) {
+      const trimmed = section.trim();
+      if (!trimmed) continue;
+
+      if (trimmed.startsWith('✅')) {
+        html += `<div style="margin-bottom:12px;"><span class="tag-good">${trimmed.split('\n')[0]}</span>`;
+        const items = trimmed.split('\n').slice(1).filter(l => l.trim());
+        if (items.length) {
+          html += '<ul>';
+          for (const item of items) {
+            const clean = item.replace(/^[-*•]\s*/, '').trim();
+            if (clean) html += `<li>${clean}</li>`;
+          }
+          html += '</ul>';
+        }
+        html += '</div>';
+      } else if (trimmed.startsWith('⚠️')) {
+        html += `<div style="margin-bottom:12px;"><span class="tag-miss">${trimmed.split('\n')[0]}</span>`;
+        const items = trimmed.split('\n').slice(1).filter(l => l.trim());
+        if (items.length) {
+          html += '<ul>';
+          for (const item of items) {
+            const clean = item.replace(/^[-*•]\s*/, '').trim();
+            if (clean) html += `<li>${clean}</li>`;
+          }
+          html += '</ul>';
+        }
+        html += '</div>';
+      } else if (trimmed.startsWith('💡')) {
+        html += `<div style="margin-bottom:4px;"><span class="tag-tip">${trimmed.split('\n')[0]}</span>`;
+        const items = trimmed.split('\n').slice(1).filter(l => l.trim());
+        if (items.length) {
+          html += '<ul>';
+          for (const item of items) {
+            const clean = item.replace(/^[-*•]\s*/, '').trim();
+            if (clean) html += `<li>${clean}</li>`;
+          }
+          html += '</ul>';
+        }
+        html += '</div>';
+      } else {
+        // 其他内容（如 AI 额外说明）
+        html += `<p style="margin-bottom:8px;">${trimmed}</p>`;
+      }
+    }
+    return html || `<p>${text}</p>`;
   }
 
   // ============ Copy PS Text ============

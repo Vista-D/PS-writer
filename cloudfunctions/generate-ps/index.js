@@ -1,134 +1,122 @@
 /**
  * CloudBase Event Function: generate-ps
- * 
- * 接收问卷数据，调用 DeepSeek API 生成英文 Personal Statement
- * 
- * 调用方式：
- *   - 通过 CloudBase SDK: tcb.callFunction({ name: 'generate-ps', data: {...} })
- *   - 或通过 HTTP 访问（需启用 HTTP 访问）
- * 
- * 请求参数：
- *   {
- *     apiKey: string,         // DeepSeek API Key
- *     type: 'ucas'|'hongkong', // 文书类型
- *     name: string,           // 申请人姓名
- *     questions: [            // 问卷答案
- *       { id: number, question: string, answer: string }
- *     ]
- *   }
- * 
- * 返回结果：
- *   {
- *     success: boolean,
- *     ps: string,              // 生成的 Personal Statement
- *     stats: {                // 统计信息
- *       charNoSpace: number,
- *       charTotal: number,
- *       words: number,
- *       lines: number
- *     },
- *     error?: string
- *   }
+ *
+ * 两种模式：
+ *   1. generate（默认）：接收问卷数据，调用 DeepSeek 生成英文 PS
+ *   2. check：接收已生成的 PS 和目标大学信息，调用 DeepSeek 检查匹配度
+ *
+ * 请求参数（generate 模式）：
+ *   { apiKey, type, name, questions }
+ *
+ * 请求参数（check 模式）：
+ *   { mode: 'check', apiKey, psText, type, targetUniversity, major }
  */
 
 const axios = require('axios');
 
-// DeepSeek API 配置
 const DEEPSEEK_API = 'https://api.deepseek.com/v1/chat/completions';
 const MODEL = 'deepseek-chat';
 
 exports.main = async (event, context) => {
-  console.log('[generate-ps] Received request:', JSON.stringify({
-    type: event.type,
-    name: event.name,
+  const mode = event.mode || 'generate';
+  console.log(`[generate-ps] mode=${mode}`, JSON.stringify({
+    type: event.type, name: event.name,
     answeredCount: event.questions?.filter(q => q.answer?.trim()).length || 0
   }));
 
   try {
-    const { apiKey, type, name, questions } = event;
+    if (!event.apiKey) return { success: false, error: '缺少 API Key' };
 
-    // 参数校验
-    if (!apiKey) {
-      return { success: false, error: '缺少 API Key，请在设置中输入你的 DeepSeek API Key' };
+    if (mode === 'check') {
+      return await handleCheck(event);
     }
-    if (!type) {
-      return { success: false, error: '请选择文书类型' };
-    }
-    if (!questions || questions.filter(q => q.answer?.trim()).length < 3) {
-      return { success: false, error: '请至少回答 3 个问题' };
-    }
-
-    // 将问卷答案整理成 AI 可读的格式
-    const userInfo = buildUserProfile(type, name, questions);
-    
-    // 构建 prompt
-    const systemPrompt = getSystemPrompt(type);
-    const userPrompt = userInfo;
-
-    console.log('[generate-ps] Calling DeepSeek API...');
-
-    // 调用 DeepSeek
-    const response = await axios.post(
-      DEEPSEEK_API,
-      {
-        model: MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: 60000 // 60 秒超时
-      }
-    );
-
-    const ps = response.data.choices[0].message.content.trim();
-    
-    // 计算统计信息
-    const stats = calculateStats(ps, type);
-
-    console.log('[generate-ps] Success. Stats:', JSON.stringify(stats));
-
-    return {
-      success: true,
-      ps: ps,
-      stats: stats
-    };
+    return await handleGenerate(event);
 
   } catch (error) {
     console.error('[generate-ps] Error:', error.message);
-    
-    // 区分错误类型
     if (error.response) {
-      const status = error.response.status;
-      if (status === 401) {
-        return { success: false, error: 'API Key 无效，请检查后重试' };
-      } else if (status === 429) {
-        return { success: false, error: 'API 调用次数超限，请稍后重试' };
-      } else {
-        return { success: false, error: `API 错误 (${status}): ${error.response.data?.error?.message || '未知错误'}` };
-      }
-    } else if (error.code === 'ECONNABORTED') {
-      return { success: false, error: 'AI 响应超时，请重试' };
-    } else {
-      return { success: false, error: `请求失败: ${error.message}` };
+      const s = error.response.status;
+      if (s === 401) return { success: false, error: 'API Key 无效，请检查后重试' };
+      if (s === 429) return { success: false, error: 'API 调用次数超限，请稍后重试' };
+      return { success: false, error: `API 错误 (${s}): ${error.response.data?.error?.message || ''}` };
     }
+    if (error.code === 'ECONNABORTED') return { success: false, error: 'AI 响应超时，请重试' };
+    return { success: false, error: `请求失败: ${error.message}` };
   }
 };
 
+/** 生成文书 */
+async function handleGenerate(event) {
+  const { type, name, questions } = event;
+  if (!type) return { success: false, error: '请选择文书类型' };
+  if (!questions || questions.filter(q => q.answer?.trim()).length < 3) {
+    return { success: false, error: '请至少回答 3 个问题' };
+  }
+
+  const userInfo = buildUserProfile(type, name, questions);
+  const systemPrompt = getSystemPrompt(type);
+
+  const res = await axios.post(DEEPSEEK_API, {
+    model: MODEL,
+    messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userInfo }],
+    temperature: 0.7, max_tokens: 4000
+  }, {
+    headers: { 'Authorization': `Bearer ${event.apiKey}`, 'Content-Type': 'application/json' },
+    timeout: 60000
+  });
+
+  const ps = res.data.choices[0].message.content.trim();
+  const stats = calculateStats(ps, type);
+  return { success: true, ps, stats };
+}
+
+/** 检查文书与目标学校的匹配度 */
+async function handleCheck(event) {
+  const { psText, type, targetUniversity, major } = event;
+  if (!psText) return { success: false, error: '缺少文书内容（psText）' };
+
+  const typeLabel = type === 'ucas' ? '英国 UCAS' : '香港大学';
+  const systemMsg = `你是资深大学招生官，擅长分析 Personal Statement 与目标院校的匹配度。
+
+请严格按以下结构输出分析（不要加额外说明，直接按此格式）：
+
+✅ 覆盖得好的方面
+（列出 2-4 点该文书做得好的地方，针对该学校要求）
+
+⚠️ 需要改进或补充的方面
+（列出 2-4 点该文书的不足或遗漏，针对该学校要求）
+
+💡 改进建议
+（给出 2-3 条具体修改建议）
+
+如果用户没有填写目标大学，请基于专业类型给出通用的建议。`;
+
+  const userMsg = `目标大学/专业：${targetUniversity || '(未填写，请给出通用建议)'}
+文书类型：${typeLabel}
+目标专业：${major || '(未填写)'}
+
+===== 文书全文 =====
+
+${psText}`;
+
+  const res = await axios.post(DEEPSEEK_API, {
+    model: MODEL,
+    messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: userMsg }],
+    temperature: 0.3, max_tokens: 2000
+  }, {
+    headers: { 'Authorization': `Bearer ${event.apiKey}`, 'Content-Type': 'application/json' },
+    timeout: 30000
+  });
+
+  return { success: true, analysis: res.data.choices[0].message.content.trim() };
+}
+
 /**
- * 构建用户画像（中文问卷 → 英文结构化描述）
+ * 构建用户画像
  */
 function buildUserProfile(type, name, questions) {
   const qMap = {};
   questions.forEach(q => { qMap[q.id] = q.answer?.trim() || ''; });
-
   const get = (id) => qMap[id] || '';
 
   const major = get(1) || 'your chosen subject';
@@ -161,18 +149,14 @@ function buildUserProfile(type, name, questions) {
   const hobbies = get(29) || '';
   const freeText = get(30) || '';
 
-  // 构建结构化的用户信息
   let profile = `## 申请信息\n\n`;
   profile += `目标专业：${major}\n`;
   profile += `学校/课程：${school}\n`;
   if (grade) profile += `英语成绩：${grade}\n\n`;
   else profile += '\n';
 
-  profile += `## 学术兴趣起源\n\n`;
-  profile += `${interestOrigin}\n\n`;
-  if (triggerEvent && triggerEvent !== interestOrigin) {
-    profile += `关键触发事件：${triggerEvent}\n\n`;
-  }
+  profile += `## 学术兴趣起源\n\n${interestOrigin}\n\n`;
+  if (triggerEvent && triggerEvent !== interestOrigin) profile += `关键触发事件：${triggerEvent}\n\n`;
   if (subField) profile += `感兴趣的细分方向：${subField}\n\n`;
   if (readings) profile += `相关阅读：${readings}\n\n`;
 
@@ -205,10 +189,8 @@ function buildUserProfile(type, name, questions) {
   if (contribution) profile += `社区贡献：${contribution}\n\n`;
 
   if (otherInfo || freeText) {
-    profile += `## 补充信息\n\n`;
-    profile += `${otherInfo || ''}\n${freeText || ''}\n`;
+    profile += `## 补充信息\n\n${otherInfo || ''}\n${freeText || ''}\n`;
   }
-
   return profile;
 }
 
@@ -275,14 +257,10 @@ function getSystemPrompt(type) {
   }
 }
 
-/**
- * 计算 PS 统计信息
- */
 function calculateStats(ps, type) {
   const charNoSpace = ps.replace(/\s/g, '').length;
   const charTotal = ps.length;
   const words = ps.split(/\s+/).filter(w => w.length > 0).length;
   const lines = ps.split('\n').filter(l => l.trim()).length;
-
   return { charNoSpace, charTotal, words, lines };
 }
